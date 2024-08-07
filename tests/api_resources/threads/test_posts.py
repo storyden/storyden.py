@@ -2,14 +2,21 @@
 
 from __future__ import annotations
 
-import os
+from Storyden import Storyden, AsyncStoryden
+
+from Storyden.types.threads import PostCreateResponse
+
 from typing import Any, cast
 
+import os
 import pytest
-
-from storyden import Storyden, AsyncStoryden
+import httpx
+from typing_extensions import get_args
+from typing import Optional
+from respx import MockRouter
+from Storyden import Storyden, AsyncStoryden
 from tests.utils import assert_matches_type
-from storyden.types.threads import PostCreateResponse
+from Storyden.types.threads import post_create_params
 
 base_url = os.environ.get("TEST_API_BASE_URL", "http://127.0.0.1:4010")
 

@@ -8,15 +8,15 @@ from typing_extensions import Required, Annotated, TypedDict
 
 import pytest
 
-from storyden._types import Base64FileInput
-from storyden._utils import (
+from Storyden._types import Base64FileInput
+from Storyden._utils import (
     PropertyInfo,
     transform as _transform,
     parse_datetime,
     async_transform as _async_transform,
 )
-from storyden._compat import PYDANTIC_V2
-from storyden._models import BaseModel
+from Storyden._compat import PYDANTIC_V2
+from Storyden._models import BaseModel
 
 _T = TypeVar("_T")
 

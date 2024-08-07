@@ -2,19 +2,28 @@
 
 from __future__ import annotations
 
-import os
+from Storyden import Storyden, AsyncStoryden
+
+from Storyden.types import (
+    CollectionCreateResponse,
+    CollectionRetrieveResponse,
+    CollectionUpdateResponse,
+    CollectionListResponse,
+)
+
 from typing import Any, cast
 
+import os
 import pytest
-
-from storyden import Storyden, AsyncStoryden
+import httpx
+from typing_extensions import get_args
+from typing import Optional
+from respx import MockRouter
+from Storyden import Storyden, AsyncStoryden
 from tests.utils import assert_matches_type
-from storyden.types import (
-    CollectionListResponse,
-    CollectionCreateResponse,
-    CollectionUpdateResponse,
-    CollectionRetrieveResponse,
-)
+from Storyden.types import collection_create_params
+from Storyden.types import collection_update_params
+from Storyden.types import collection_list_params
 
 base_url = os.environ.get("TEST_API_BASE_URL", "http://127.0.0.1:4010")
 
@@ -173,6 +182,44 @@ class TestCollections:
 
         assert cast(Any, response.is_closed) is True
 
+    @parametrize
+    def test_method_delete(self, client: Storyden) -> None:
+        collection = client.collections.delete(
+            "cc5lnd2s1s4652adtu50",
+        )
+        assert collection is None
+
+    @parametrize
+    def test_raw_response_delete(self, client: Storyden) -> None:
+        response = client.collections.with_raw_response.delete(
+            "cc5lnd2s1s4652adtu50",
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        collection = response.parse()
+        assert collection is None
+
+    @parametrize
+    def test_streaming_response_delete(self, client: Storyden) -> None:
+        with client.collections.with_streaming_response.delete(
+            "cc5lnd2s1s4652adtu50",
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            collection = response.parse()
+            assert collection is None
+
+        assert cast(Any, response.is_closed) is True
+
+    @parametrize
+    def test_path_params_delete(self, client: Storyden) -> None:
+        with pytest.raises(ValueError, match=r"Expected a non-empty value for `collection_id` but received ''"):
+            client.collections.with_raw_response.delete(
+                "",
+            )
+
 
 class TestAsyncCollections:
     parametrize = pytest.mark.parametrize("async_client", [False, True], indirect=True, ids=["loose", "strict"])
@@ -327,3 +374,41 @@ class TestAsyncCollections:
             assert_matches_type(CollectionListResponse, collection, path=["response"])
 
         assert cast(Any, response.is_closed) is True
+
+    @parametrize
+    async def test_method_delete(self, async_client: AsyncStoryden) -> None:
+        collection = await async_client.collections.delete(
+            "cc5lnd2s1s4652adtu50",
+        )
+        assert collection is None
+
+    @parametrize
+    async def test_raw_response_delete(self, async_client: AsyncStoryden) -> None:
+        response = await async_client.collections.with_raw_response.delete(
+            "cc5lnd2s1s4652adtu50",
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        collection = await response.parse()
+        assert collection is None
+
+    @parametrize
+    async def test_streaming_response_delete(self, async_client: AsyncStoryden) -> None:
+        async with async_client.collections.with_streaming_response.delete(
+            "cc5lnd2s1s4652adtu50",
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            collection = await response.parse()
+            assert collection is None
+
+        assert cast(Any, response.is_closed) is True
+
+    @parametrize
+    async def test_path_params_delete(self, async_client: AsyncStoryden) -> None:
+        with pytest.raises(ValueError, match=r"Expected a non-empty value for `collection_id` but received ''"):
+            await async_client.collections.with_raw_response.delete(
+                "",
+            )
