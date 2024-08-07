@@ -2,7 +2,7 @@ import operator
 from typing import Any
 from typing_extensions import override
 
-from storyden._utils import LazyProxy
+from Storyden._utils import LazyProxy
 
 
 class RecursiveLazyProxy(LazyProxy[Any]):

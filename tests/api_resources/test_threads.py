@@ -2,19 +2,23 @@
 
 from __future__ import annotations
 
-import os
+from Storyden import Storyden, AsyncStoryden
+
+from Storyden.types import ThreadCreateResponse, ThreadRetrieveResponse, ThreadUpdateResponse, ThreadListResponse
+
 from typing import Any, cast
 
+import os
 import pytest
-
-from storyden import Storyden, AsyncStoryden
+import httpx
+from typing_extensions import get_args
+from typing import Optional
+from respx import MockRouter
+from Storyden import Storyden, AsyncStoryden
 from tests.utils import assert_matches_type
-from storyden.types import (
-    ThreadListResponse,
-    ThreadCreateResponse,
-    ThreadPublishChangesResponse,
-    ThreadRetrieveInformationResponse,
-)
+from Storyden.types import thread_create_params
+from Storyden.types import thread_update_params
+from Storyden.types import thread_list_params
 
 base_url = os.environ.get("TEST_API_BASE_URL", "http://127.0.0.1:4010")
 
@@ -76,6 +80,96 @@ class TestThreads:
         assert cast(Any, response.is_closed) is True
 
     @parametrize
+    def test_method_retrieve(self, client: Storyden) -> None:
+        thread = client.threads.retrieve(
+            "cc5lnd2s1s4652adtu50-top-10-movies-thread",
+        )
+        assert_matches_type(ThreadRetrieveResponse, thread, path=["response"])
+
+    @parametrize
+    def test_raw_response_retrieve(self, client: Storyden) -> None:
+        response = client.threads.with_raw_response.retrieve(
+            "cc5lnd2s1s4652adtu50-top-10-movies-thread",
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        thread = response.parse()
+        assert_matches_type(ThreadRetrieveResponse, thread, path=["response"])
+
+    @parametrize
+    def test_streaming_response_retrieve(self, client: Storyden) -> None:
+        with client.threads.with_streaming_response.retrieve(
+            "cc5lnd2s1s4652adtu50-top-10-movies-thread",
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            thread = response.parse()
+            assert_matches_type(ThreadRetrieveResponse, thread, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
+
+    @parametrize
+    def test_path_params_retrieve(self, client: Storyden) -> None:
+        with pytest.raises(ValueError, match=r"Expected a non-empty value for `thread_mark` but received ''"):
+            client.threads.with_raw_response.retrieve(
+                "",
+            )
+
+    @parametrize
+    def test_method_update(self, client: Storyden) -> None:
+        thread = client.threads.update(
+            thread_mark="cc5lnd2s1s4652adtu50-top-10-movies-thread",
+        )
+        assert_matches_type(ThreadUpdateResponse, thread, path=["response"])
+
+    @parametrize
+    def test_method_update_with_all_params(self, client: Storyden) -> None:
+        thread = client.threads.update(
+            thread_mark="cc5lnd2s1s4652adtu50-top-10-movies-thread",
+            body="body",
+            category="cc5lnd2s1s4652adtu50",
+            meta={"foo": "bar"},
+            tags=["cc5lnd2s1s4652adtu50", "cc5lnd2s1s4652adtu50", "cc5lnd2s1s4652adtu50"],
+            title="Hello world!",
+            url="url",
+            visibility="draft",
+        )
+        assert_matches_type(ThreadUpdateResponse, thread, path=["response"])
+
+    @parametrize
+    def test_raw_response_update(self, client: Storyden) -> None:
+        response = client.threads.with_raw_response.update(
+            thread_mark="cc5lnd2s1s4652adtu50-top-10-movies-thread",
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        thread = response.parse()
+        assert_matches_type(ThreadUpdateResponse, thread, path=["response"])
+
+    @parametrize
+    def test_streaming_response_update(self, client: Storyden) -> None:
+        with client.threads.with_streaming_response.update(
+            thread_mark="cc5lnd2s1s4652adtu50-top-10-movies-thread",
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            thread = response.parse()
+            assert_matches_type(ThreadUpdateResponse, thread, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
+
+    @parametrize
+    def test_path_params_update(self, client: Storyden) -> None:
+        with pytest.raises(ValueError, match=r"Expected a non-empty value for `thread_mark` but received ''"):
+            client.threads.with_raw_response.update(
+                thread_mark="",
+            )
+
+    @parametrize
     def test_method_list(self, client: Storyden) -> None:
         thread = client.threads.list()
         assert_matches_type(ThreadListResponse, thread, path=["response"])
@@ -112,15 +206,15 @@ class TestThreads:
         assert cast(Any, response.is_closed) is True
 
     @parametrize
-    def test_method_archive(self, client: Storyden) -> None:
-        thread = client.threads.archive(
+    def test_method_delete(self, client: Storyden) -> None:
+        thread = client.threads.delete(
             "cc5lnd2s1s4652adtu50-top-10-movies-thread",
         )
         assert thread is None
 
     @parametrize
-    def test_raw_response_archive(self, client: Storyden) -> None:
-        response = client.threads.with_raw_response.archive(
+    def test_raw_response_delete(self, client: Storyden) -> None:
+        response = client.threads.with_raw_response.delete(
             "cc5lnd2s1s4652adtu50-top-10-movies-thread",
         )
 
@@ -130,8 +224,8 @@ class TestThreads:
         assert thread is None
 
     @parametrize
-    def test_streaming_response_archive(self, client: Storyden) -> None:
-        with client.threads.with_streaming_response.archive(
+    def test_streaming_response_delete(self, client: Storyden) -> None:
+        with client.threads.with_streaming_response.delete(
             "cc5lnd2s1s4652adtu50-top-10-movies-thread",
         ) as response:
             assert not response.is_closed
@@ -143,99 +237,9 @@ class TestThreads:
         assert cast(Any, response.is_closed) is True
 
     @parametrize
-    def test_path_params_archive(self, client: Storyden) -> None:
+    def test_path_params_delete(self, client: Storyden) -> None:
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `thread_mark` but received ''"):
-            client.threads.with_raw_response.archive(
-                "",
-            )
-
-    @parametrize
-    def test_method_publish_changes(self, client: Storyden) -> None:
-        thread = client.threads.publish_changes(
-            thread_mark="cc5lnd2s1s4652adtu50-top-10-movies-thread",
-        )
-        assert_matches_type(ThreadPublishChangesResponse, thread, path=["response"])
-
-    @parametrize
-    def test_method_publish_changes_with_all_params(self, client: Storyden) -> None:
-        thread = client.threads.publish_changes(
-            thread_mark="cc5lnd2s1s4652adtu50-top-10-movies-thread",
-            body="body",
-            category="cc5lnd2s1s4652adtu50",
-            meta={"foo": "bar"},
-            tags=["cc5lnd2s1s4652adtu50", "cc5lnd2s1s4652adtu50", "cc5lnd2s1s4652adtu50"],
-            title="Hello world!",
-            url="url",
-            visibility="draft",
-        )
-        assert_matches_type(ThreadPublishChangesResponse, thread, path=["response"])
-
-    @parametrize
-    def test_raw_response_publish_changes(self, client: Storyden) -> None:
-        response = client.threads.with_raw_response.publish_changes(
-            thread_mark="cc5lnd2s1s4652adtu50-top-10-movies-thread",
-        )
-
-        assert response.is_closed is True
-        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
-        thread = response.parse()
-        assert_matches_type(ThreadPublishChangesResponse, thread, path=["response"])
-
-    @parametrize
-    def test_streaming_response_publish_changes(self, client: Storyden) -> None:
-        with client.threads.with_streaming_response.publish_changes(
-            thread_mark="cc5lnd2s1s4652adtu50-top-10-movies-thread",
-        ) as response:
-            assert not response.is_closed
-            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
-
-            thread = response.parse()
-            assert_matches_type(ThreadPublishChangesResponse, thread, path=["response"])
-
-        assert cast(Any, response.is_closed) is True
-
-    @parametrize
-    def test_path_params_publish_changes(self, client: Storyden) -> None:
-        with pytest.raises(ValueError, match=r"Expected a non-empty value for `thread_mark` but received ''"):
-            client.threads.with_raw_response.publish_changes(
-                thread_mark="",
-            )
-
-    @parametrize
-    def test_method_retrieve_information(self, client: Storyden) -> None:
-        thread = client.threads.retrieve_information(
-            "cc5lnd2s1s4652adtu50-top-10-movies-thread",
-        )
-        assert_matches_type(ThreadRetrieveInformationResponse, thread, path=["response"])
-
-    @parametrize
-    def test_raw_response_retrieve_information(self, client: Storyden) -> None:
-        response = client.threads.with_raw_response.retrieve_information(
-            "cc5lnd2s1s4652adtu50-top-10-movies-thread",
-        )
-
-        assert response.is_closed is True
-        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
-        thread = response.parse()
-        assert_matches_type(ThreadRetrieveInformationResponse, thread, path=["response"])
-
-    @parametrize
-    def test_streaming_response_retrieve_information(self, client: Storyden) -> None:
-        with client.threads.with_streaming_response.retrieve_information(
-            "cc5lnd2s1s4652adtu50-top-10-movies-thread",
-        ) as response:
-            assert not response.is_closed
-            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
-
-            thread = response.parse()
-            assert_matches_type(ThreadRetrieveInformationResponse, thread, path=["response"])
-
-        assert cast(Any, response.is_closed) is True
-
-    @parametrize
-    def test_path_params_retrieve_information(self, client: Storyden) -> None:
-        with pytest.raises(ValueError, match=r"Expected a non-empty value for `thread_mark` but received ''"):
-            client.threads.with_raw_response.retrieve_information(
+            client.threads.with_raw_response.delete(
                 "",
             )
 
@@ -297,6 +301,96 @@ class TestAsyncThreads:
         assert cast(Any, response.is_closed) is True
 
     @parametrize
+    async def test_method_retrieve(self, async_client: AsyncStoryden) -> None:
+        thread = await async_client.threads.retrieve(
+            "cc5lnd2s1s4652adtu50-top-10-movies-thread",
+        )
+        assert_matches_type(ThreadRetrieveResponse, thread, path=["response"])
+
+    @parametrize
+    async def test_raw_response_retrieve(self, async_client: AsyncStoryden) -> None:
+        response = await async_client.threads.with_raw_response.retrieve(
+            "cc5lnd2s1s4652adtu50-top-10-movies-thread",
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        thread = await response.parse()
+        assert_matches_type(ThreadRetrieveResponse, thread, path=["response"])
+
+    @parametrize
+    async def test_streaming_response_retrieve(self, async_client: AsyncStoryden) -> None:
+        async with async_client.threads.with_streaming_response.retrieve(
+            "cc5lnd2s1s4652adtu50-top-10-movies-thread",
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            thread = await response.parse()
+            assert_matches_type(ThreadRetrieveResponse, thread, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
+
+    @parametrize
+    async def test_path_params_retrieve(self, async_client: AsyncStoryden) -> None:
+        with pytest.raises(ValueError, match=r"Expected a non-empty value for `thread_mark` but received ''"):
+            await async_client.threads.with_raw_response.retrieve(
+                "",
+            )
+
+    @parametrize
+    async def test_method_update(self, async_client: AsyncStoryden) -> None:
+        thread = await async_client.threads.update(
+            thread_mark="cc5lnd2s1s4652adtu50-top-10-movies-thread",
+        )
+        assert_matches_type(ThreadUpdateResponse, thread, path=["response"])
+
+    @parametrize
+    async def test_method_update_with_all_params(self, async_client: AsyncStoryden) -> None:
+        thread = await async_client.threads.update(
+            thread_mark="cc5lnd2s1s4652adtu50-top-10-movies-thread",
+            body="body",
+            category="cc5lnd2s1s4652adtu50",
+            meta={"foo": "bar"},
+            tags=["cc5lnd2s1s4652adtu50", "cc5lnd2s1s4652adtu50", "cc5lnd2s1s4652adtu50"],
+            title="Hello world!",
+            url="url",
+            visibility="draft",
+        )
+        assert_matches_type(ThreadUpdateResponse, thread, path=["response"])
+
+    @parametrize
+    async def test_raw_response_update(self, async_client: AsyncStoryden) -> None:
+        response = await async_client.threads.with_raw_response.update(
+            thread_mark="cc5lnd2s1s4652adtu50-top-10-movies-thread",
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        thread = await response.parse()
+        assert_matches_type(ThreadUpdateResponse, thread, path=["response"])
+
+    @parametrize
+    async def test_streaming_response_update(self, async_client: AsyncStoryden) -> None:
+        async with async_client.threads.with_streaming_response.update(
+            thread_mark="cc5lnd2s1s4652adtu50-top-10-movies-thread",
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            thread = await response.parse()
+            assert_matches_type(ThreadUpdateResponse, thread, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
+
+    @parametrize
+    async def test_path_params_update(self, async_client: AsyncStoryden) -> None:
+        with pytest.raises(ValueError, match=r"Expected a non-empty value for `thread_mark` but received ''"):
+            await async_client.threads.with_raw_response.update(
+                thread_mark="",
+            )
+
+    @parametrize
     async def test_method_list(self, async_client: AsyncStoryden) -> None:
         thread = await async_client.threads.list()
         assert_matches_type(ThreadListResponse, thread, path=["response"])
@@ -333,15 +427,15 @@ class TestAsyncThreads:
         assert cast(Any, response.is_closed) is True
 
     @parametrize
-    async def test_method_archive(self, async_client: AsyncStoryden) -> None:
-        thread = await async_client.threads.archive(
+    async def test_method_delete(self, async_client: AsyncStoryden) -> None:
+        thread = await async_client.threads.delete(
             "cc5lnd2s1s4652adtu50-top-10-movies-thread",
         )
         assert thread is None
 
     @parametrize
-    async def test_raw_response_archive(self, async_client: AsyncStoryden) -> None:
-        response = await async_client.threads.with_raw_response.archive(
+    async def test_raw_response_delete(self, async_client: AsyncStoryden) -> None:
+        response = await async_client.threads.with_raw_response.delete(
             "cc5lnd2s1s4652adtu50-top-10-movies-thread",
         )
 
@@ -351,8 +445,8 @@ class TestAsyncThreads:
         assert thread is None
 
     @parametrize
-    async def test_streaming_response_archive(self, async_client: AsyncStoryden) -> None:
-        async with async_client.threads.with_streaming_response.archive(
+    async def test_streaming_response_delete(self, async_client: AsyncStoryden) -> None:
+        async with async_client.threads.with_streaming_response.delete(
             "cc5lnd2s1s4652adtu50-top-10-movies-thread",
         ) as response:
             assert not response.is_closed
@@ -364,98 +458,8 @@ class TestAsyncThreads:
         assert cast(Any, response.is_closed) is True
 
     @parametrize
-    async def test_path_params_archive(self, async_client: AsyncStoryden) -> None:
+    async def test_path_params_delete(self, async_client: AsyncStoryden) -> None:
         with pytest.raises(ValueError, match=r"Expected a non-empty value for `thread_mark` but received ''"):
-            await async_client.threads.with_raw_response.archive(
-                "",
-            )
-
-    @parametrize
-    async def test_method_publish_changes(self, async_client: AsyncStoryden) -> None:
-        thread = await async_client.threads.publish_changes(
-            thread_mark="cc5lnd2s1s4652adtu50-top-10-movies-thread",
-        )
-        assert_matches_type(ThreadPublishChangesResponse, thread, path=["response"])
-
-    @parametrize
-    async def test_method_publish_changes_with_all_params(self, async_client: AsyncStoryden) -> None:
-        thread = await async_client.threads.publish_changes(
-            thread_mark="cc5lnd2s1s4652adtu50-top-10-movies-thread",
-            body="body",
-            category="cc5lnd2s1s4652adtu50",
-            meta={"foo": "bar"},
-            tags=["cc5lnd2s1s4652adtu50", "cc5lnd2s1s4652adtu50", "cc5lnd2s1s4652adtu50"],
-            title="Hello world!",
-            url="url",
-            visibility="draft",
-        )
-        assert_matches_type(ThreadPublishChangesResponse, thread, path=["response"])
-
-    @parametrize
-    async def test_raw_response_publish_changes(self, async_client: AsyncStoryden) -> None:
-        response = await async_client.threads.with_raw_response.publish_changes(
-            thread_mark="cc5lnd2s1s4652adtu50-top-10-movies-thread",
-        )
-
-        assert response.is_closed is True
-        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
-        thread = await response.parse()
-        assert_matches_type(ThreadPublishChangesResponse, thread, path=["response"])
-
-    @parametrize
-    async def test_streaming_response_publish_changes(self, async_client: AsyncStoryden) -> None:
-        async with async_client.threads.with_streaming_response.publish_changes(
-            thread_mark="cc5lnd2s1s4652adtu50-top-10-movies-thread",
-        ) as response:
-            assert not response.is_closed
-            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
-
-            thread = await response.parse()
-            assert_matches_type(ThreadPublishChangesResponse, thread, path=["response"])
-
-        assert cast(Any, response.is_closed) is True
-
-    @parametrize
-    async def test_path_params_publish_changes(self, async_client: AsyncStoryden) -> None:
-        with pytest.raises(ValueError, match=r"Expected a non-empty value for `thread_mark` but received ''"):
-            await async_client.threads.with_raw_response.publish_changes(
-                thread_mark="",
-            )
-
-    @parametrize
-    async def test_method_retrieve_information(self, async_client: AsyncStoryden) -> None:
-        thread = await async_client.threads.retrieve_information(
-            "cc5lnd2s1s4652adtu50-top-10-movies-thread",
-        )
-        assert_matches_type(ThreadRetrieveInformationResponse, thread, path=["response"])
-
-    @parametrize
-    async def test_raw_response_retrieve_information(self, async_client: AsyncStoryden) -> None:
-        response = await async_client.threads.with_raw_response.retrieve_information(
-            "cc5lnd2s1s4652adtu50-top-10-movies-thread",
-        )
-
-        assert response.is_closed is True
-        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
-        thread = await response.parse()
-        assert_matches_type(ThreadRetrieveInformationResponse, thread, path=["response"])
-
-    @parametrize
-    async def test_streaming_response_retrieve_information(self, async_client: AsyncStoryden) -> None:
-        async with async_client.threads.with_streaming_response.retrieve_information(
-            "cc5lnd2s1s4652adtu50-top-10-movies-thread",
-        ) as response:
-            assert not response.is_closed
-            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
-
-            thread = await response.parse()
-            assert_matches_type(ThreadRetrieveInformationResponse, thread, path=["response"])
-
-        assert cast(Any, response.is_closed) is True
-
-    @parametrize
-    async def test_path_params_retrieve_information(self, async_client: AsyncStoryden) -> None:
-        with pytest.raises(ValueError, match=r"Expected a non-empty value for `thread_mark` but received ''"):
-            await async_client.threads.with_raw_response.retrieve_information(
+            await async_client.threads.with_raw_response.delete(
                 "",
             )

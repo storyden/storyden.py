@@ -2,22 +2,28 @@
 
 from __future__ import annotations
 
-import os
+from Storyden import Storyden, AsyncStoryden
+
+from Storyden.types import AssetCreateResponse
+
 from typing import Any, cast
 
-import httpx
-import pytest
-from respx import MockRouter
-
-from storyden import Storyden, AsyncStoryden
-from tests.utils import assert_matches_type
-from storyden.types import AssetCreateResponse
-from storyden._response import (
+from Storyden._response import (
     BinaryAPIResponse,
-    AsyncBinaryAPIResponse,
     StreamedBinaryAPIResponse,
+    AsyncBinaryAPIResponse,
     AsyncStreamedBinaryAPIResponse,
 )
+
+import os
+import pytest
+import httpx
+from typing_extensions import get_args
+from typing import Optional
+from respx import MockRouter
+from Storyden import Storyden, AsyncStoryden
+from tests.utils import assert_matches_type
+from Storyden.types import asset_create_params
 
 base_url = os.environ.get("TEST_API_BASE_URL", "http://127.0.0.1:4010")
 

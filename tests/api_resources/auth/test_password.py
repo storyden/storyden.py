@@ -2,18 +2,29 @@
 
 from __future__ import annotations
 
-import os
+from Storyden import Storyden, AsyncStoryden
+
+from Storyden.types.auth import (
+    PasswordCreateResponse,
+    PasswordUpdateResponse,
+    PasswordSigninResponse,
+    PasswordSignupResponse,
+)
+
 from typing import Any, cast
 
+import os
 import pytest
-
-from storyden import Storyden, AsyncStoryden
+import httpx
+from typing_extensions import get_args
+from typing import Optional
+from respx import MockRouter
+from Storyden import Storyden, AsyncStoryden
 from tests.utils import assert_matches_type
-from storyden.types.auth import (
-    PasswordCreateResponse,
-    PasswordSigninResponse,
-    PasswordUpdateResponse,
-)
+from Storyden.types.auth import password_create_params
+from Storyden.types.auth import password_update_params
+from Storyden.types.auth import password_signin_params
+from Storyden.types.auth import password_signup_params
 
 base_url = os.environ.get("TEST_API_BASE_URL", "http://127.0.0.1:4010")
 
@@ -120,6 +131,40 @@ class TestPassword:
 
         assert cast(Any, response.is_closed) is True
 
+    @parametrize
+    def test_method_signup(self, client: Storyden) -> None:
+        password = client.auth.password.signup(
+            token="password",
+            identifier="odin",
+        )
+        assert_matches_type(PasswordSignupResponse, password, path=["response"])
+
+    @parametrize
+    def test_raw_response_signup(self, client: Storyden) -> None:
+        response = client.auth.password.with_raw_response.signup(
+            token="password",
+            identifier="odin",
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        password = response.parse()
+        assert_matches_type(PasswordSignupResponse, password, path=["response"])
+
+    @parametrize
+    def test_streaming_response_signup(self, client: Storyden) -> None:
+        with client.auth.password.with_streaming_response.signup(
+            token="password",
+            identifier="odin",
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            password = response.parse()
+            assert_matches_type(PasswordSignupResponse, password, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
+
 
 class TestAsyncPassword:
     parametrize = pytest.mark.parametrize("async_client", [False, True], indirect=True, ids=["loose", "strict"])
@@ -220,5 +265,39 @@ class TestAsyncPassword:
 
             password = await response.parse()
             assert_matches_type(PasswordSigninResponse, password, path=["response"])
+
+        assert cast(Any, response.is_closed) is True
+
+    @parametrize
+    async def test_method_signup(self, async_client: AsyncStoryden) -> None:
+        password = await async_client.auth.password.signup(
+            token="password",
+            identifier="odin",
+        )
+        assert_matches_type(PasswordSignupResponse, password, path=["response"])
+
+    @parametrize
+    async def test_raw_response_signup(self, async_client: AsyncStoryden) -> None:
+        response = await async_client.auth.password.with_raw_response.signup(
+            token="password",
+            identifier="odin",
+        )
+
+        assert response.is_closed is True
+        assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+        password = await response.parse()
+        assert_matches_type(PasswordSignupResponse, password, path=["response"])
+
+    @parametrize
+    async def test_streaming_response_signup(self, async_client: AsyncStoryden) -> None:
+        async with async_client.auth.password.with_streaming_response.signup(
+            token="password",
+            identifier="odin",
+        ) as response:
+            assert not response.is_closed
+            assert response.http_request.headers.get("X-Stainless-Lang") == "python"
+
+            password = await response.parse()
+            assert_matches_type(PasswordSignupResponse, password, path=["response"])
 
         assert cast(Any, response.is_closed) is True

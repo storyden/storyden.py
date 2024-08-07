@@ -5,8 +5,8 @@ from typing import Iterator, AsyncIterator
 import httpx
 import pytest
 
-from storyden import Storyden, AsyncStoryden
-from storyden._streaming import Stream, AsyncStream, ServerSentEvent
+from Storyden import Storyden, AsyncStoryden
+from Storyden._streaming import Stream, AsyncStream, ServerSentEvent
 
 
 @pytest.mark.asyncio

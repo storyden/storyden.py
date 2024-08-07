@@ -2,37 +2,47 @@
 
 from __future__ import annotations
 
-import gc
-import os
-import json
+import httpx
+
+from Storyden import Storyden, AsyncStoryden
+
+from Storyden._exceptions import APITimeoutError, APIStatusError, APIResponseValidationError
+
+from typing import Any, cast
+
+from pydantic import ValidationError
+
 import asyncio
+import gc
 import inspect
+import json
+import os
 import tracemalloc
-from typing import Any, Union, cast
+from typing import Dict, Any, Union, cast
 from unittest import mock
 
 import httpx
 import pytest
 from respx import MockRouter
-from pydantic import ValidationError
 
-from storyden import Storyden, AsyncStoryden, APIResponseValidationError
-from storyden._types import Omit
-from storyden._models import BaseModel, FinalRequestOptions
-from storyden._constants import RAW_RESPONSE_HEADER
-from storyden._exceptions import StorydenError, APIStatusError, APITimeoutError, APIResponseValidationError
-from storyden._base_client import (
+from Storyden import Storyden, AsyncStoryden, APIResponseValidationError
+from Storyden._models import FinalRequestOptions, BaseModel
+from Storyden._types import NOT_GIVEN, Headers, NotGiven, Query, Body, Timeout, Omit
+from Storyden._base_client import (
     DEFAULT_TIMEOUT,
     HTTPX_DEFAULT_TIMEOUT,
     BaseClient,
+    RequestOptions,
     make_request_options,
 )
-
+from Storyden._streaming import Stream, AsyncStream
+from Storyden._constants import RAW_RESPONSE_HEADER
+from Storyden._response import APIResponse, AsyncAPIResponse
 from .utils import update_env
+from typing import cast
+from typing import cast
 
 base_url = os.environ.get("TEST_API_BASE_URL", "http://127.0.0.1:4010")
-storyden_session = "My Storyden Session"
-storyden_webauthn_session = "My Storyden Webauthn Session"
 
 
 def _get_params(client: BaseClient[Any, Any]) -> dict[str, str]:
@@ -54,12 +64,7 @@ def _get_open_connections(client: Storyden | AsyncStoryden) -> int:
 
 
 class TestStoryden:
-    client = Storyden(
-        base_url=base_url,
-        storyden_session=storyden_session,
-        storyden_webauthn_session=storyden_webauthn_session,
-        _strict_response_validation=True,
-    )
+    client = Storyden(base_url=base_url, _strict_response_validation=True)
 
     @pytest.mark.respx(base_url=base_url)
     def test_raw_response(self, respx_mock: MockRouter) -> None:
@@ -85,14 +90,6 @@ class TestStoryden:
         copied = self.client.copy()
         assert id(copied) != id(self.client)
 
-        copied = self.client.copy(storyden_session="another My Storyden Session")
-        assert copied.storyden_session == "another My Storyden Session"
-        assert self.client.storyden_session == "My Storyden Session"
-
-        copied = self.client.copy(storyden_webauthn_session="another My Storyden Webauthn Session")
-        assert copied.storyden_webauthn_session == "another My Storyden Webauthn Session"
-        assert self.client.storyden_webauthn_session == "My Storyden Webauthn Session"
-
     def test_copy_default_options(self) -> None:
         # options that have a default are overridden correctly
         copied = self.client.copy(max_retries=7)
@@ -110,13 +107,7 @@ class TestStoryden:
         assert isinstance(self.client.timeout, httpx.Timeout)
 
     def test_copy_default_headers(self) -> None:
-        client = Storyden(
-            base_url=base_url,
-            storyden_session=storyden_session,
-            storyden_webauthn_session=storyden_webauthn_session,
-            _strict_response_validation=True,
-            default_headers={"X-Foo": "bar"},
-        )
+        client = Storyden(base_url=base_url, _strict_response_validation=True, default_headers={"X-Foo": "bar"})
         assert client.default_headers["X-Foo"] == "bar"
 
         # does not override the already given value when not specified
@@ -148,13 +139,7 @@ class TestStoryden:
             client.copy(set_default_headers={}, default_headers={"X-Foo": "Bar"})
 
     def test_copy_default_query(self) -> None:
-        client = Storyden(
-            base_url=base_url,
-            storyden_session=storyden_session,
-            storyden_webauthn_session=storyden_webauthn_session,
-            _strict_response_validation=True,
-            default_query={"foo": "bar"},
-        )
+        client = Storyden(base_url=base_url, _strict_response_validation=True, default_query={"foo": "bar"})
         assert _get_params(client)["foo"] == "bar"
 
         # does not override the already given value when not specified
@@ -243,10 +228,10 @@ class TestStoryden:
                         # to_raw_response_wrapper leaks through the @functools.wraps() decorator.
                         #
                         # removing the decorator fixes the leak for reasons we don't understand.
-                        "storyden/_legacy_response.py",
-                        "storyden/_response.py",
+                        "Storyden/_legacy_response.py",
+                        "Storyden/_response.py",
                         # pydantic.BaseModel.model_dump || pydantic.BaseModel.dict leak memory for some reason.
-                        "storyden/_compat.py",
+                        "Storyden/_compat.py",
                         # Standard library leaks we don't care about.
                         "/logging/__init__.py",
                     ]
@@ -277,13 +262,7 @@ class TestStoryden:
         assert timeout == httpx.Timeout(100.0)
 
     def test_client_timeout_option(self) -> None:
-        client = Storyden(
-            base_url=base_url,
-            storyden_session=storyden_session,
-            storyden_webauthn_session=storyden_webauthn_session,
-            _strict_response_validation=True,
-            timeout=httpx.Timeout(0),
-        )
+        client = Storyden(base_url=base_url, _strict_response_validation=True, timeout=httpx.Timeout(0))
 
         request = client._build_request(FinalRequestOptions(method="get", url="/foo"))
         timeout = httpx.Timeout(**request.extensions["timeout"])  # type: ignore
@@ -292,13 +271,7 @@ class TestStoryden:
     def test_http_client_timeout_option(self) -> None:
         # custom timeout given to the httpx client should be used
         with httpx.Client(timeout=None) as http_client:
-            client = Storyden(
-                base_url=base_url,
-                storyden_session=storyden_session,
-                storyden_webauthn_session=storyden_webauthn_session,
-                _strict_response_validation=True,
-                http_client=http_client,
-            )
+            client = Storyden(base_url=base_url, _strict_response_validation=True, http_client=http_client)
 
             request = client._build_request(FinalRequestOptions(method="get", url="/foo"))
             timeout = httpx.Timeout(**request.extensions["timeout"])  # type: ignore
@@ -306,13 +279,7 @@ class TestStoryden:
 
         # no timeout given to the httpx client should not use the httpx default
         with httpx.Client() as http_client:
-            client = Storyden(
-                base_url=base_url,
-                storyden_session=storyden_session,
-                storyden_webauthn_session=storyden_webauthn_session,
-                _strict_response_validation=True,
-                http_client=http_client,
-            )
+            client = Storyden(base_url=base_url, _strict_response_validation=True, http_client=http_client)
 
             request = client._build_request(FinalRequestOptions(method="get", url="/foo"))
             timeout = httpx.Timeout(**request.extensions["timeout"])  # type: ignore
@@ -320,13 +287,7 @@ class TestStoryden:
 
         # explicitly passing the default timeout currently results in it being ignored
         with httpx.Client(timeout=HTTPX_DEFAULT_TIMEOUT) as http_client:
-            client = Storyden(
-                base_url=base_url,
-                storyden_session=storyden_session,
-                storyden_webauthn_session=storyden_webauthn_session,
-                _strict_response_validation=True,
-                http_client=http_client,
-            )
+            client = Storyden(base_url=base_url, _strict_response_validation=True, http_client=http_client)
 
             request = client._build_request(FinalRequestOptions(method="get", url="/foo"))
             timeout = httpx.Timeout(**request.extensions["timeout"])  # type: ignore
@@ -335,30 +296,16 @@ class TestStoryden:
     async def test_invalid_http_client(self) -> None:
         with pytest.raises(TypeError, match="Invalid `http_client` arg"):
             async with httpx.AsyncClient() as http_client:
-                Storyden(
-                    base_url=base_url,
-                    storyden_session=storyden_session,
-                    storyden_webauthn_session=storyden_webauthn_session,
-                    _strict_response_validation=True,
-                    http_client=cast(Any, http_client),
-                )
+                Storyden(base_url=base_url, _strict_response_validation=True, http_client=cast(Any, http_client))
 
     def test_default_headers_option(self) -> None:
-        client = Storyden(
-            base_url=base_url,
-            storyden_session=storyden_session,
-            storyden_webauthn_session=storyden_webauthn_session,
-            _strict_response_validation=True,
-            default_headers={"X-Foo": "bar"},
-        )
+        client = Storyden(base_url=base_url, _strict_response_validation=True, default_headers={"X-Foo": "bar"})
         request = client._build_request(FinalRequestOptions(method="get", url="/foo"))
         assert request.headers.get("x-foo") == "bar"
         assert request.headers.get("x-stainless-lang") == "python"
 
         client2 = Storyden(
             base_url=base_url,
-            storyden_session=storyden_session,
-            storyden_webauthn_session=storyden_webauthn_session,
             _strict_response_validation=True,
             default_headers={
                 "X-Foo": "stainless",
@@ -369,34 +316,8 @@ class TestStoryden:
         assert request.headers.get("x-foo") == "stainless"
         assert request.headers.get("x-stainless-lang") == "my-overriding-header"
 
-    def test_validate_headers(self) -> None:
-        client = Storyden(
-            base_url=base_url,
-            storyden_session=storyden_session,
-            storyden_webauthn_session=storyden_webauthn_session,
-            _strict_response_validation=True,
-        )
-        request = client._build_request(FinalRequestOptions(method="get", url="/foo"))
-        assert request.headers.get("storyden-session") == storyden_session
-
-        with pytest.raises(StorydenError):
-            with update_env(**{"STORYDEN_STORYDEN_SESSION": Omit()}):
-                client2 = Storyden(
-                    base_url=base_url,
-                    storyden_session=None,
-                    storyden_webauthn_session=storyden_webauthn_session,
-                    _strict_response_validation=True,
-                )
-            _ = client2
-
     def test_default_query_option(self) -> None:
-        client = Storyden(
-            base_url=base_url,
-            storyden_session=storyden_session,
-            storyden_webauthn_session=storyden_webauthn_session,
-            _strict_response_validation=True,
-            default_query={"query_param": "bar"},
-        )
+        client = Storyden(base_url=base_url, _strict_response_validation=True, default_query={"query_param": "bar"})
         request = client._build_request(FinalRequestOptions(method="get", url="/foo"))
         url = httpx.URL(request.url)
         assert dict(url.params) == {"query_param": "bar"}
@@ -595,12 +516,7 @@ class TestStoryden:
         assert response.foo == 2
 
     def test_base_url_setter(self) -> None:
-        client = Storyden(
-            base_url="https://example.com/from_init",
-            storyden_session=storyden_session,
-            storyden_webauthn_session=storyden_webauthn_session,
-            _strict_response_validation=True,
-        )
+        client = Storyden(base_url="https://example.com/from_init", _strict_response_validation=True)
         assert client.base_url == "https://example.com/from_init/"
 
         client.base_url = "https://example.com/from_setter"  # type: ignore[assignment]
@@ -609,26 +525,15 @@ class TestStoryden:
 
     def test_base_url_env(self) -> None:
         with update_env(STORYDEN_BASE_URL="http://localhost:5000/from/env"):
-            client = Storyden(
-                storyden_session=storyden_session,
-                storyden_webauthn_session=storyden_webauthn_session,
-                _strict_response_validation=True,
-            )
+            client = Storyden(_strict_response_validation=True)
             assert client.base_url == "http://localhost:5000/from/env/"
 
     @pytest.mark.parametrize(
         "client",
         [
+            Storyden(base_url="http://localhost:5000/custom/path/", _strict_response_validation=True),
             Storyden(
                 base_url="http://localhost:5000/custom/path/",
-                storyden_session=storyden_session,
-                storyden_webauthn_session=storyden_webauthn_session,
-                _strict_response_validation=True,
-            ),
-            Storyden(
-                base_url="http://localhost:5000/custom/path/",
-                storyden_session=storyden_session,
-                storyden_webauthn_session=storyden_webauthn_session,
                 _strict_response_validation=True,
                 http_client=httpx.Client(),
             ),
@@ -648,16 +553,9 @@ class TestStoryden:
     @pytest.mark.parametrize(
         "client",
         [
+            Storyden(base_url="http://localhost:5000/custom/path/", _strict_response_validation=True),
             Storyden(
                 base_url="http://localhost:5000/custom/path/",
-                storyden_session=storyden_session,
-                storyden_webauthn_session=storyden_webauthn_session,
-                _strict_response_validation=True,
-            ),
-            Storyden(
-                base_url="http://localhost:5000/custom/path/",
-                storyden_session=storyden_session,
-                storyden_webauthn_session=storyden_webauthn_session,
                 _strict_response_validation=True,
                 http_client=httpx.Client(),
             ),
@@ -677,16 +575,9 @@ class TestStoryden:
     @pytest.mark.parametrize(
         "client",
         [
+            Storyden(base_url="http://localhost:5000/custom/path/", _strict_response_validation=True),
             Storyden(
                 base_url="http://localhost:5000/custom/path/",
-                storyden_session=storyden_session,
-                storyden_webauthn_session=storyden_webauthn_session,
-                _strict_response_validation=True,
-            ),
-            Storyden(
-                base_url="http://localhost:5000/custom/path/",
-                storyden_session=storyden_session,
-                storyden_webauthn_session=storyden_webauthn_session,
                 _strict_response_validation=True,
                 http_client=httpx.Client(),
             ),
@@ -704,12 +595,7 @@ class TestStoryden:
         assert request.url == "https://myapi.com/foo"
 
     def test_copied_client_does_not_close_http(self) -> None:
-        client = Storyden(
-            base_url=base_url,
-            storyden_session=storyden_session,
-            storyden_webauthn_session=storyden_webauthn_session,
-            _strict_response_validation=True,
-        )
+        client = Storyden(base_url=base_url, _strict_response_validation=True)
         assert not client.is_closed()
 
         copied = client.copy()
@@ -720,12 +606,7 @@ class TestStoryden:
         assert not client.is_closed()
 
     def test_client_context_manager(self) -> None:
-        client = Storyden(
-            base_url=base_url,
-            storyden_session=storyden_session,
-            storyden_webauthn_session=storyden_webauthn_session,
-            _strict_response_validation=True,
-        )
+        client = Storyden(base_url=base_url, _strict_response_validation=True)
         with client as c2:
             assert c2 is client
             assert not c2.is_closed()
@@ -746,13 +627,7 @@ class TestStoryden:
 
     def test_client_max_retries_validation(self) -> None:
         with pytest.raises(TypeError, match=r"max_retries cannot be None"):
-            Storyden(
-                base_url=base_url,
-                storyden_session=storyden_session,
-                storyden_webauthn_session=storyden_webauthn_session,
-                _strict_response_validation=True,
-                max_retries=cast(Any, None),
-            )
+            Storyden(base_url=base_url, _strict_response_validation=True, max_retries=cast(Any, None))
 
     @pytest.mark.respx(base_url=base_url)
     def test_received_text_for_expected_json(self, respx_mock: MockRouter) -> None:
@@ -761,22 +636,12 @@ class TestStoryden:
 
         respx_mock.get("/foo").mock(return_value=httpx.Response(200, text="my-custom-format"))
 
-        strict_client = Storyden(
-            base_url=base_url,
-            storyden_session=storyden_session,
-            storyden_webauthn_session=storyden_webauthn_session,
-            _strict_response_validation=True,
-        )
+        strict_client = Storyden(base_url=base_url, _strict_response_validation=True)
 
         with pytest.raises(APIResponseValidationError):
             strict_client.get("/foo", cast_to=Model)
 
-        client = Storyden(
-            base_url=base_url,
-            storyden_session=storyden_session,
-            storyden_webauthn_session=storyden_webauthn_session,
-            _strict_response_validation=False,
-        )
+        client = Storyden(base_url=base_url, _strict_response_validation=False)
 
         response = client.get("/foo", cast_to=Model)
         assert isinstance(response, str)  # type: ignore[unreachable]
@@ -803,40 +668,45 @@ class TestStoryden:
     )
     @mock.patch("time.time", mock.MagicMock(return_value=1696004797))
     def test_parse_retry_after_header(self, remaining_retries: int, retry_after: str, timeout: float) -> None:
-        client = Storyden(
-            base_url=base_url,
-            storyden_session=storyden_session,
-            storyden_webauthn_session=storyden_webauthn_session,
-            _strict_response_validation=True,
-        )
+        client = Storyden(base_url=base_url, _strict_response_validation=True)
 
         headers = httpx.Headers({"retry-after": retry_after})
         options = FinalRequestOptions(method="get", url="/foo", max_retries=3)
         calculated = client._calculate_retry_timeout(remaining_retries, options, headers)
         assert calculated == pytest.approx(timeout, 0.5 * 0.875)  # pyright: ignore[reportUnknownMemberType]
 
-    @mock.patch("storyden._base_client.BaseClient._calculate_retry_timeout", _low_retry_timeout)
+    @mock.patch("Storyden._base_client.BaseClient._calculate_retry_timeout", _low_retry_timeout)
     @pytest.mark.respx(base_url=base_url)
     def test_retrying_timeout_errors_doesnt_leak(self, respx_mock: MockRouter) -> None:
-        respx_mock.get("/version").mock(side_effect=httpx.TimeoutException("Test timeout error"))
+        respx_mock.patch("/v1/admin").mock(side_effect=httpx.TimeoutException("Test timeout error"))
 
         with pytest.raises(APITimeoutError):
-            self.client.get("/version", cast_to=httpx.Response, options={"headers": {RAW_RESPONSE_HEADER: "stream"}})
+            self.client.patch(
+                "/v1/admin",
+                body=cast(object, dict()),
+                cast_to=httpx.Response,
+                options={"headers": {RAW_RESPONSE_HEADER: "stream"}},
+            )
 
         assert _get_open_connections(self.client) == 0
 
-    @mock.patch("storyden._base_client.BaseClient._calculate_retry_timeout", _low_retry_timeout)
+    @mock.patch("Storyden._base_client.BaseClient._calculate_retry_timeout", _low_retry_timeout)
     @pytest.mark.respx(base_url=base_url)
     def test_retrying_status_errors_doesnt_leak(self, respx_mock: MockRouter) -> None:
-        respx_mock.get("/version").mock(return_value=httpx.Response(500))
+        respx_mock.patch("/v1/admin").mock(return_value=httpx.Response(500))
 
         with pytest.raises(APIStatusError):
-            self.client.get("/version", cast_to=httpx.Response, options={"headers": {RAW_RESPONSE_HEADER: "stream"}})
+            self.client.patch(
+                "/v1/admin",
+                body=cast(object, dict()),
+                cast_to=httpx.Response,
+                options={"headers": {RAW_RESPONSE_HEADER: "stream"}},
+            )
 
         assert _get_open_connections(self.client) == 0
 
     @pytest.mark.parametrize("failures_before_success", [0, 2, 4])
-    @mock.patch("storyden._base_client.BaseClient._calculate_retry_timeout", _low_retry_timeout)
+    @mock.patch("Storyden._base_client.BaseClient._calculate_retry_timeout", _low_retry_timeout)
     @pytest.mark.respx(base_url=base_url)
     def test_retries_taken(self, client: Storyden, failures_before_success: int, respx_mock: MockRouter) -> None:
         client = client.with_options(max_retries=4)
@@ -850,20 +720,15 @@ class TestStoryden:
                 return httpx.Response(500)
             return httpx.Response(200)
 
-        respx_mock.get("/version").mock(side_effect=retry_handler)
+        respx_mock.patch("/v1/admin").mock(side_effect=retry_handler)
 
-        response = client.version.with_raw_response.retrieve()
+        response = client.admin.with_raw_response.update()
 
         assert response.retries_taken == failures_before_success
 
 
 class TestAsyncStoryden:
-    client = AsyncStoryden(
-        base_url=base_url,
-        storyden_session=storyden_session,
-        storyden_webauthn_session=storyden_webauthn_session,
-        _strict_response_validation=True,
-    )
+    client = AsyncStoryden(base_url=base_url, _strict_response_validation=True)
 
     @pytest.mark.respx(base_url=base_url)
     @pytest.mark.asyncio
@@ -891,14 +756,6 @@ class TestAsyncStoryden:
         copied = self.client.copy()
         assert id(copied) != id(self.client)
 
-        copied = self.client.copy(storyden_session="another My Storyden Session")
-        assert copied.storyden_session == "another My Storyden Session"
-        assert self.client.storyden_session == "My Storyden Session"
-
-        copied = self.client.copy(storyden_webauthn_session="another My Storyden Webauthn Session")
-        assert copied.storyden_webauthn_session == "another My Storyden Webauthn Session"
-        assert self.client.storyden_webauthn_session == "My Storyden Webauthn Session"
-
     def test_copy_default_options(self) -> None:
         # options that have a default are overridden correctly
         copied = self.client.copy(max_retries=7)
@@ -916,13 +773,7 @@ class TestAsyncStoryden:
         assert isinstance(self.client.timeout, httpx.Timeout)
 
     def test_copy_default_headers(self) -> None:
-        client = AsyncStoryden(
-            base_url=base_url,
-            storyden_session=storyden_session,
-            storyden_webauthn_session=storyden_webauthn_session,
-            _strict_response_validation=True,
-            default_headers={"X-Foo": "bar"},
-        )
+        client = AsyncStoryden(base_url=base_url, _strict_response_validation=True, default_headers={"X-Foo": "bar"})
         assert client.default_headers["X-Foo"] == "bar"
 
         # does not override the already given value when not specified
@@ -954,13 +805,7 @@ class TestAsyncStoryden:
             client.copy(set_default_headers={}, default_headers={"X-Foo": "Bar"})
 
     def test_copy_default_query(self) -> None:
-        client = AsyncStoryden(
-            base_url=base_url,
-            storyden_session=storyden_session,
-            storyden_webauthn_session=storyden_webauthn_session,
-            _strict_response_validation=True,
-            default_query={"foo": "bar"},
-        )
+        client = AsyncStoryden(base_url=base_url, _strict_response_validation=True, default_query={"foo": "bar"})
         assert _get_params(client)["foo"] == "bar"
 
         # does not override the already given value when not specified
@@ -1049,10 +894,10 @@ class TestAsyncStoryden:
                         # to_raw_response_wrapper leaks through the @functools.wraps() decorator.
                         #
                         # removing the decorator fixes the leak for reasons we don't understand.
-                        "storyden/_legacy_response.py",
-                        "storyden/_response.py",
+                        "Storyden/_legacy_response.py",
+                        "Storyden/_response.py",
                         # pydantic.BaseModel.model_dump || pydantic.BaseModel.dict leak memory for some reason.
-                        "storyden/_compat.py",
+                        "Storyden/_compat.py",
                         # Standard library leaks we don't care about.
                         "/logging/__init__.py",
                     ]
@@ -1083,13 +928,7 @@ class TestAsyncStoryden:
         assert timeout == httpx.Timeout(100.0)
 
     async def test_client_timeout_option(self) -> None:
-        client = AsyncStoryden(
-            base_url=base_url,
-            storyden_session=storyden_session,
-            storyden_webauthn_session=storyden_webauthn_session,
-            _strict_response_validation=True,
-            timeout=httpx.Timeout(0),
-        )
+        client = AsyncStoryden(base_url=base_url, _strict_response_validation=True, timeout=httpx.Timeout(0))
 
         request = client._build_request(FinalRequestOptions(method="get", url="/foo"))
         timeout = httpx.Timeout(**request.extensions["timeout"])  # type: ignore
@@ -1098,13 +937,7 @@ class TestAsyncStoryden:
     async def test_http_client_timeout_option(self) -> None:
         # custom timeout given to the httpx client should be used
         async with httpx.AsyncClient(timeout=None) as http_client:
-            client = AsyncStoryden(
-                base_url=base_url,
-                storyden_session=storyden_session,
-                storyden_webauthn_session=storyden_webauthn_session,
-                _strict_response_validation=True,
-                http_client=http_client,
-            )
+            client = AsyncStoryden(base_url=base_url, _strict_response_validation=True, http_client=http_client)
 
             request = client._build_request(FinalRequestOptions(method="get", url="/foo"))
             timeout = httpx.Timeout(**request.extensions["timeout"])  # type: ignore
@@ -1112,13 +945,7 @@ class TestAsyncStoryden:
 
         # no timeout given to the httpx client should not use the httpx default
         async with httpx.AsyncClient() as http_client:
-            client = AsyncStoryden(
-                base_url=base_url,
-                storyden_session=storyden_session,
-                storyden_webauthn_session=storyden_webauthn_session,
-                _strict_response_validation=True,
-                http_client=http_client,
-            )
+            client = AsyncStoryden(base_url=base_url, _strict_response_validation=True, http_client=http_client)
 
             request = client._build_request(FinalRequestOptions(method="get", url="/foo"))
             timeout = httpx.Timeout(**request.extensions["timeout"])  # type: ignore
@@ -1126,13 +953,7 @@ class TestAsyncStoryden:
 
         # explicitly passing the default timeout currently results in it being ignored
         async with httpx.AsyncClient(timeout=HTTPX_DEFAULT_TIMEOUT) as http_client:
-            client = AsyncStoryden(
-                base_url=base_url,
-                storyden_session=storyden_session,
-                storyden_webauthn_session=storyden_webauthn_session,
-                _strict_response_validation=True,
-                http_client=http_client,
-            )
+            client = AsyncStoryden(base_url=base_url, _strict_response_validation=True, http_client=http_client)
 
             request = client._build_request(FinalRequestOptions(method="get", url="/foo"))
             timeout = httpx.Timeout(**request.extensions["timeout"])  # type: ignore
@@ -1141,30 +962,16 @@ class TestAsyncStoryden:
     def test_invalid_http_client(self) -> None:
         with pytest.raises(TypeError, match="Invalid `http_client` arg"):
             with httpx.Client() as http_client:
-                AsyncStoryden(
-                    base_url=base_url,
-                    storyden_session=storyden_session,
-                    storyden_webauthn_session=storyden_webauthn_session,
-                    _strict_response_validation=True,
-                    http_client=cast(Any, http_client),
-                )
+                AsyncStoryden(base_url=base_url, _strict_response_validation=True, http_client=cast(Any, http_client))
 
     def test_default_headers_option(self) -> None:
-        client = AsyncStoryden(
-            base_url=base_url,
-            storyden_session=storyden_session,
-            storyden_webauthn_session=storyden_webauthn_session,
-            _strict_response_validation=True,
-            default_headers={"X-Foo": "bar"},
-        )
+        client = AsyncStoryden(base_url=base_url, _strict_response_validation=True, default_headers={"X-Foo": "bar"})
         request = client._build_request(FinalRequestOptions(method="get", url="/foo"))
         assert request.headers.get("x-foo") == "bar"
         assert request.headers.get("x-stainless-lang") == "python"
 
         client2 = AsyncStoryden(
             base_url=base_url,
-            storyden_session=storyden_session,
-            storyden_webauthn_session=storyden_webauthn_session,
             _strict_response_validation=True,
             default_headers={
                 "X-Foo": "stainless",
@@ -1175,33 +982,9 @@ class TestAsyncStoryden:
         assert request.headers.get("x-foo") == "stainless"
         assert request.headers.get("x-stainless-lang") == "my-overriding-header"
 
-    def test_validate_headers(self) -> None:
-        client = AsyncStoryden(
-            base_url=base_url,
-            storyden_session=storyden_session,
-            storyden_webauthn_session=storyden_webauthn_session,
-            _strict_response_validation=True,
-        )
-        request = client._build_request(FinalRequestOptions(method="get", url="/foo"))
-        assert request.headers.get("storyden-session") == storyden_session
-
-        with pytest.raises(StorydenError):
-            with update_env(**{"STORYDEN_STORYDEN_SESSION": Omit()}):
-                client2 = AsyncStoryden(
-                    base_url=base_url,
-                    storyden_session=None,
-                    storyden_webauthn_session=storyden_webauthn_session,
-                    _strict_response_validation=True,
-                )
-            _ = client2
-
     def test_default_query_option(self) -> None:
         client = AsyncStoryden(
-            base_url=base_url,
-            storyden_session=storyden_session,
-            storyden_webauthn_session=storyden_webauthn_session,
-            _strict_response_validation=True,
-            default_query={"query_param": "bar"},
+            base_url=base_url, _strict_response_validation=True, default_query={"query_param": "bar"}
         )
         request = client._build_request(FinalRequestOptions(method="get", url="/foo"))
         url = httpx.URL(request.url)
@@ -1401,12 +1184,7 @@ class TestAsyncStoryden:
         assert response.foo == 2
 
     def test_base_url_setter(self) -> None:
-        client = AsyncStoryden(
-            base_url="https://example.com/from_init",
-            storyden_session=storyden_session,
-            storyden_webauthn_session=storyden_webauthn_session,
-            _strict_response_validation=True,
-        )
+        client = AsyncStoryden(base_url="https://example.com/from_init", _strict_response_validation=True)
         assert client.base_url == "https://example.com/from_init/"
 
         client.base_url = "https://example.com/from_setter"  # type: ignore[assignment]
@@ -1415,26 +1193,15 @@ class TestAsyncStoryden:
 
     def test_base_url_env(self) -> None:
         with update_env(STORYDEN_BASE_URL="http://localhost:5000/from/env"):
-            client = AsyncStoryden(
-                storyden_session=storyden_session,
-                storyden_webauthn_session=storyden_webauthn_session,
-                _strict_response_validation=True,
-            )
+            client = AsyncStoryden(_strict_response_validation=True)
             assert client.base_url == "http://localhost:5000/from/env/"
 
     @pytest.mark.parametrize(
         "client",
         [
+            AsyncStoryden(base_url="http://localhost:5000/custom/path/", _strict_response_validation=True),
             AsyncStoryden(
                 base_url="http://localhost:5000/custom/path/",
-                storyden_session=storyden_session,
-                storyden_webauthn_session=storyden_webauthn_session,
-                _strict_response_validation=True,
-            ),
-            AsyncStoryden(
-                base_url="http://localhost:5000/custom/path/",
-                storyden_session=storyden_session,
-                storyden_webauthn_session=storyden_webauthn_session,
                 _strict_response_validation=True,
                 http_client=httpx.AsyncClient(),
             ),
@@ -1454,16 +1221,9 @@ class TestAsyncStoryden:
     @pytest.mark.parametrize(
         "client",
         [
+            AsyncStoryden(base_url="http://localhost:5000/custom/path/", _strict_response_validation=True),
             AsyncStoryden(
                 base_url="http://localhost:5000/custom/path/",
-                storyden_session=storyden_session,
-                storyden_webauthn_session=storyden_webauthn_session,
-                _strict_response_validation=True,
-            ),
-            AsyncStoryden(
-                base_url="http://localhost:5000/custom/path/",
-                storyden_session=storyden_session,
-                storyden_webauthn_session=storyden_webauthn_session,
                 _strict_response_validation=True,
                 http_client=httpx.AsyncClient(),
             ),
@@ -1483,16 +1243,9 @@ class TestAsyncStoryden:
     @pytest.mark.parametrize(
         "client",
         [
+            AsyncStoryden(base_url="http://localhost:5000/custom/path/", _strict_response_validation=True),
             AsyncStoryden(
                 base_url="http://localhost:5000/custom/path/",
-                storyden_session=storyden_session,
-                storyden_webauthn_session=storyden_webauthn_session,
-                _strict_response_validation=True,
-            ),
-            AsyncStoryden(
-                base_url="http://localhost:5000/custom/path/",
-                storyden_session=storyden_session,
-                storyden_webauthn_session=storyden_webauthn_session,
                 _strict_response_validation=True,
                 http_client=httpx.AsyncClient(),
             ),
@@ -1510,12 +1263,7 @@ class TestAsyncStoryden:
         assert request.url == "https://myapi.com/foo"
 
     async def test_copied_client_does_not_close_http(self) -> None:
-        client = AsyncStoryden(
-            base_url=base_url,
-            storyden_session=storyden_session,
-            storyden_webauthn_session=storyden_webauthn_session,
-            _strict_response_validation=True,
-        )
+        client = AsyncStoryden(base_url=base_url, _strict_response_validation=True)
         assert not client.is_closed()
 
         copied = client.copy()
@@ -1527,12 +1275,7 @@ class TestAsyncStoryden:
         assert not client.is_closed()
 
     async def test_client_context_manager(self) -> None:
-        client = AsyncStoryden(
-            base_url=base_url,
-            storyden_session=storyden_session,
-            storyden_webauthn_session=storyden_webauthn_session,
-            _strict_response_validation=True,
-        )
+        client = AsyncStoryden(base_url=base_url, _strict_response_validation=True)
         async with client as c2:
             assert c2 is client
             assert not c2.is_closed()
@@ -1554,13 +1297,7 @@ class TestAsyncStoryden:
 
     async def test_client_max_retries_validation(self) -> None:
         with pytest.raises(TypeError, match=r"max_retries cannot be None"):
-            AsyncStoryden(
-                base_url=base_url,
-                storyden_session=storyden_session,
-                storyden_webauthn_session=storyden_webauthn_session,
-                _strict_response_validation=True,
-                max_retries=cast(Any, None),
-            )
+            AsyncStoryden(base_url=base_url, _strict_response_validation=True, max_retries=cast(Any, None))
 
     @pytest.mark.respx(base_url=base_url)
     @pytest.mark.asyncio
@@ -1570,22 +1307,12 @@ class TestAsyncStoryden:
 
         respx_mock.get("/foo").mock(return_value=httpx.Response(200, text="my-custom-format"))
 
-        strict_client = AsyncStoryden(
-            base_url=base_url,
-            storyden_session=storyden_session,
-            storyden_webauthn_session=storyden_webauthn_session,
-            _strict_response_validation=True,
-        )
+        strict_client = AsyncStoryden(base_url=base_url, _strict_response_validation=True)
 
         with pytest.raises(APIResponseValidationError):
             await strict_client.get("/foo", cast_to=Model)
 
-        client = AsyncStoryden(
-            base_url=base_url,
-            storyden_session=storyden_session,
-            storyden_webauthn_session=storyden_webauthn_session,
-            _strict_response_validation=False,
-        )
+        client = AsyncStoryden(base_url=base_url, _strict_response_validation=False)
 
         response = await client.get("/foo", cast_to=Model)
         assert isinstance(response, str)  # type: ignore[unreachable]
@@ -1613,44 +1340,45 @@ class TestAsyncStoryden:
     @mock.patch("time.time", mock.MagicMock(return_value=1696004797))
     @pytest.mark.asyncio
     async def test_parse_retry_after_header(self, remaining_retries: int, retry_after: str, timeout: float) -> None:
-        client = AsyncStoryden(
-            base_url=base_url,
-            storyden_session=storyden_session,
-            storyden_webauthn_session=storyden_webauthn_session,
-            _strict_response_validation=True,
-        )
+        client = AsyncStoryden(base_url=base_url, _strict_response_validation=True)
 
         headers = httpx.Headers({"retry-after": retry_after})
         options = FinalRequestOptions(method="get", url="/foo", max_retries=3)
         calculated = client._calculate_retry_timeout(remaining_retries, options, headers)
         assert calculated == pytest.approx(timeout, 0.5 * 0.875)  # pyright: ignore[reportUnknownMemberType]
 
-    @mock.patch("storyden._base_client.BaseClient._calculate_retry_timeout", _low_retry_timeout)
+    @mock.patch("Storyden._base_client.BaseClient._calculate_retry_timeout", _low_retry_timeout)
     @pytest.mark.respx(base_url=base_url)
     async def test_retrying_timeout_errors_doesnt_leak(self, respx_mock: MockRouter) -> None:
-        respx_mock.get("/version").mock(side_effect=httpx.TimeoutException("Test timeout error"))
+        respx_mock.patch("/v1/admin").mock(side_effect=httpx.TimeoutException("Test timeout error"))
 
         with pytest.raises(APITimeoutError):
-            await self.client.get(
-                "/version", cast_to=httpx.Response, options={"headers": {RAW_RESPONSE_HEADER: "stream"}}
+            await self.client.patch(
+                "/v1/admin",
+                body=cast(object, dict()),
+                cast_to=httpx.Response,
+                options={"headers": {RAW_RESPONSE_HEADER: "stream"}},
             )
 
         assert _get_open_connections(self.client) == 0
 
-    @mock.patch("storyden._base_client.BaseClient._calculate_retry_timeout", _low_retry_timeout)
+    @mock.patch("Storyden._base_client.BaseClient._calculate_retry_timeout", _low_retry_timeout)
     @pytest.mark.respx(base_url=base_url)
     async def test_retrying_status_errors_doesnt_leak(self, respx_mock: MockRouter) -> None:
-        respx_mock.get("/version").mock(return_value=httpx.Response(500))
+        respx_mock.patch("/v1/admin").mock(return_value=httpx.Response(500))
 
         with pytest.raises(APIStatusError):
-            await self.client.get(
-                "/version", cast_to=httpx.Response, options={"headers": {RAW_RESPONSE_HEADER: "stream"}}
+            await self.client.patch(
+                "/v1/admin",
+                body=cast(object, dict()),
+                cast_to=httpx.Response,
+                options={"headers": {RAW_RESPONSE_HEADER: "stream"}},
             )
 
         assert _get_open_connections(self.client) == 0
 
     @pytest.mark.parametrize("failures_before_success", [0, 2, 4])
-    @mock.patch("storyden._base_client.BaseClient._calculate_retry_timeout", _low_retry_timeout)
+    @mock.patch("Storyden._base_client.BaseClient._calculate_retry_timeout", _low_retry_timeout)
     @pytest.mark.respx(base_url=base_url)
     @pytest.mark.asyncio
     async def test_retries_taken(
@@ -1667,8 +1395,8 @@ class TestAsyncStoryden:
                 return httpx.Response(500)
             return httpx.Response(200)
 
-        respx_mock.get("/version").mock(side_effect=retry_handler)
+        respx_mock.patch("/v1/admin").mock(side_effect=retry_handler)
 
-        response = await client.version.with_raw_response.retrieve()
+        response = await client.admin.with_raw_response.update()
 
         assert response.retries_taken == failures_before_success

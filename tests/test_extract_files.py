@@ -4,8 +4,8 @@ from typing import Sequence
 
 import pytest
 
-from storyden._types import FileTypes
-from storyden._utils import extract_files
+from Storyden._types import FileTypes
+from Storyden._utils import extract_files
 
 
 def test_removes_files_from_input() -> None:
