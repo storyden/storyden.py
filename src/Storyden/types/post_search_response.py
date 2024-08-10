@@ -2,99 +2,21 @@
 
 from .._models import BaseModel
 
-from typing import List, Optional, Dict
-
 from datetime import datetime
+
+from typing import Optional, List
 
 from typing import Optional, Union, List, Dict, Any
 from typing_extensions import Literal
 from pydantic import Field as FieldInfo
 from ..types import shared
 
-__all__ = [
-    "PostSearchResponse",
-    "Result",
-    "ResultAsset",
-    "ResultAuthor",
-    "ResultLink",
-    "ResultLinkAsset",
-    "ResultReact",
-]
-
-
-class ResultAsset(BaseModel):
-    id: str
-    """A unique identifier for this resource."""
-
-    filename: str
-
-    height: float
-
-    mime_type: str
-
-    url: str
-
-    width: float
-
-
-class ResultAuthor(BaseModel):
-    id: str
-    """A unique identifier for this resource."""
-
-    admin: bool
-
-    handle: str
-    """The unique @ handle of an account."""
-
-    name: str
-    """The account owners display name."""
-
-
-class ResultLinkAsset(BaseModel):
-    id: str
-    """A unique identifier for this resource."""
-
-    filename: str
-
-    height: float
-
-    mime_type: str
-
-    url: str
-
-    width: float
-
-
-class ResultLink(BaseModel):
-    assets: List[ResultLinkAsset]
-
-    domain: str
-
-    slug: str
-
-    url: str
-    """A web address"""
-
-    description: Optional[str] = None
-
-    title: Optional[str] = None
-
-
-class ResultReact(BaseModel):
-    id: Optional[str] = None
-    """A unique identifier for this resource."""
-
-    emoji: Optional[str] = None
+__all__ = ["PostSearchResponse", "Result"]
 
 
 class Result(BaseModel):
     id: str
     """A unique identifier for this resource."""
-
-    assets: List[ResultAsset]
-
-    author: ResultAuthor
-    """A minimal reference to an account."""
 
     body: str
     """The body text of a post within a thread.
@@ -107,39 +29,14 @@ class Result(BaseModel):
     created_at: datetime = FieldInfo(alias="createdAt")
     """The time the resource was created."""
 
-    links: List[ResultLink]
-
-    reacts: List[ResultReact]
-    """A list of reactions this post has had from people."""
-
-    root_id: str
-    """A unique identifier for this resource."""
-
-    root_slug: str
-    """
-    A thread's ID and optional slug separated by a dash = it's unique mark. This
-    allows endpoints to respond to varying forms of a thread's ID.
-
-    For example, given a thread with the ID `cc5lnd2s1s4652adtu50` and the slug
-    `top-10-movies-thread`, Storyden will understand both the forms:
-    `cc5lnd2s1s4652adtu50-top-10-movies-thread` and `cc5lnd2s1s4652adtu50` as the
-    identifier for that thread.
-    """
-
     updated_at: datetime = FieldInfo(alias="updatedAt")
     """The time the resource was updated."""
 
     deleted_at: Optional[datetime] = FieldInfo(alias="deletedAt", default=None)
     """The time the resource was soft-deleted."""
 
-    meta: Optional[Dict[str, object]] = None
-    """Arbitrary metadata for the resource."""
-
     misc: Optional[object] = None
     """Arbitrary extra data stored with the resource."""
-
-    reply_to: Optional[str] = None
-    """A unique identifier for this resource."""
 
 
 class PostSearchResponse(BaseModel):

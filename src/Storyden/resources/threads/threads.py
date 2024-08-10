@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import httpx
 
-from .posts import PostsResource, AsyncPostsResource
-
 from ..._compat import cached_property
 
 from ...types.thread_create_response import ThreadCreateResponse
@@ -41,23 +39,12 @@ from ...types import shared_params
 from ...types import thread_create_params
 from ...types import thread_update_params
 from ...types import thread_list_params
-from .posts import (
-    PostsResource,
-    AsyncPostsResource,
-    PostsResourceWithRawResponse,
-    AsyncPostsResourceWithRawResponse,
-    PostsResourceWithStreamingResponse,
-    AsyncPostsResourceWithStreamingResponse,
-)
+from .posts import PostsResource, AsyncPostsResource
 
 __all__ = ["ThreadsResource", "AsyncThreadsResource"]
 
 
 class ThreadsResource(SyncAPIResource):
-    @cached_property
-    def posts(self) -> PostsResource:
-        return PostsResource(self._client)
-
     @cached_property
     def with_raw_response(self) -> ThreadsResourceWithRawResponse:
         return ThreadsResourceWithRawResponse(self)
@@ -349,10 +336,6 @@ class ThreadsResource(SyncAPIResource):
 
 
 class AsyncThreadsResource(AsyncAPIResource):
-    @cached_property
-    def posts(self) -> AsyncPostsResource:
-        return AsyncPostsResource(self._client)
-
     @cached_property
     def with_raw_response(self) -> AsyncThreadsResourceWithRawResponse:
         return AsyncThreadsResourceWithRawResponse(self)
@@ -663,10 +646,6 @@ class ThreadsResourceWithRawResponse:
             threads.delete,
         )
 
-    @cached_property
-    def posts(self) -> PostsResourceWithRawResponse:
-        return PostsResourceWithRawResponse(self._threads.posts)
-
 
 class AsyncThreadsResourceWithRawResponse:
     def __init__(self, threads: AsyncThreadsResource) -> None:
@@ -687,10 +666,6 @@ class AsyncThreadsResourceWithRawResponse:
         self.delete = async_to_raw_response_wrapper(
             threads.delete,
         )
-
-    @cached_property
-    def posts(self) -> AsyncPostsResourceWithRawResponse:
-        return AsyncPostsResourceWithRawResponse(self._threads.posts)
 
 
 class ThreadsResourceWithStreamingResponse:
@@ -713,10 +688,6 @@ class ThreadsResourceWithStreamingResponse:
             threads.delete,
         )
 
-    @cached_property
-    def posts(self) -> PostsResourceWithStreamingResponse:
-        return PostsResourceWithStreamingResponse(self._threads.posts)
-
 
 class AsyncThreadsResourceWithStreamingResponse:
     def __init__(self, threads: AsyncThreadsResource) -> None:
@@ -737,7 +708,3 @@ class AsyncThreadsResourceWithStreamingResponse:
         self.delete = async_to_streamed_response_wrapper(
             threads.delete,
         )
-
-    @cached_property
-    def posts(self) -> AsyncPostsResourceWithStreamingResponse:
-        return AsyncPostsResourceWithStreamingResponse(self._threads.posts)
