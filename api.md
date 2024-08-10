@@ -255,18 +255,6 @@ Methods:
 - <code title="get /v1/threads">client.threads.<a href="./src/Storyden/resources/threads/threads.py">list</a>(\*\*<a href="src/Storyden/types/thread_list_params.py">params</a>) -> <a href="./src/Storyden/types/thread_list_response.py">ThreadListResponse</a></code>
 - <code title="delete /v1/threads/{thread_mark}">client.threads.<a href="./src/Storyden/resources/threads/threads.py">delete</a>(thread_mark) -> None</code>
 
-## Posts
-
-Types:
-
-```python
-from Storyden.types.threads import PostCreateResponse
-```
-
-Methods:
-
-- <code title="post /v1/threads/{thread_mark}/posts">client.threads.posts.<a href="./src/Storyden/resources/threads/posts.py">create</a>(thread_mark, \*\*<a href="src/Storyden/types/threads/post_create_params.py">params</a>) -> <a href="./src/Storyden/types/threads/post_create_response.py">PostCreateResponse</a></code>
-
 # Posts
 
 Types:

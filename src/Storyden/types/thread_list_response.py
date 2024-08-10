@@ -11,46 +11,7 @@ from typing_extensions import Literal
 from pydantic import Field as FieldInfo
 from ..types import shared
 
-__all__ = [
-    "ThreadListResponse",
-    "Thread",
-    "ThreadAsset",
-    "ThreadAuthor",
-    "ThreadCategory",
-    "ThreadCollection",
-    "ThreadCollectionOwner",
-    "ThreadReact",
-    "ThreadLink",
-    "ThreadLinkAsset",
-]
-
-
-class ThreadAsset(BaseModel):
-    id: str
-    """A unique identifier for this resource."""
-
-    filename: str
-
-    height: float
-
-    mime_type: str
-
-    url: str
-
-    width: float
-
-
-class ThreadAuthor(BaseModel):
-    id: str
-    """A unique identifier for this resource."""
-
-    admin: bool
-
-    handle: str
-    """The unique @ handle of an account."""
-
-    name: str
-    """The account owners display name."""
+__all__ = ["ThreadListResponse", "Thread", "ThreadCategory", "ThreadLink", "ThreadLinkAsset"]
 
 
 class ThreadCategory(BaseModel):
@@ -87,50 +48,6 @@ class ThreadCategory(BaseModel):
     """Arbitrary extra data stored with the resource."""
 
 
-class ThreadCollectionOwner(BaseModel):
-    id: str
-    """A unique identifier for this resource."""
-
-    admin: bool
-
-    handle: str
-    """The unique @ handle of an account."""
-
-    name: str
-    """The account owners display name."""
-
-
-class ThreadCollection(BaseModel):
-    id: str
-    """A unique identifier for this resource."""
-
-    created_at: datetime = FieldInfo(alias="createdAt")
-    """The time the resource was created."""
-
-    description: str
-
-    name: str
-
-    owner: ThreadCollectionOwner
-    """A minimal reference to an account."""
-
-    updated_at: datetime = FieldInfo(alias="updatedAt")
-    """The time the resource was updated."""
-
-    deleted_at: Optional[datetime] = FieldInfo(alias="deletedAt", default=None)
-    """The time the resource was soft-deleted."""
-
-    misc: Optional[object] = None
-    """Arbitrary extra data stored with the resource."""
-
-
-class ThreadReact(BaseModel):
-    id: Optional[str] = None
-    """A unique identifier for this resource."""
-
-    emoji: Optional[str] = None
-
-
 class ThreadLinkAsset(BaseModel):
     id: str
     """A unique identifier for this resource."""
@@ -165,14 +82,15 @@ class Thread(BaseModel):
     id: str
     """A unique identifier for this resource."""
 
-    assets: List[ThreadAsset]
+    body: str
+    """The body text of a post within a thread.
 
-    author: ThreadAuthor
-    """A minimal reference to an account."""
+    The type is either a string or an object, depending on what was used during
+    creation. Strings can be used for basic plain text or markdown content and
+    objects are used for more complex types such as Slate.js editor documents.
+    """
 
     category: ThreadCategory
-
-    collections: List[ThreadCollection]
 
     created_at: datetime = FieldInfo(alias="createdAt")
     """The time the resource was created."""
@@ -183,28 +101,8 @@ class Thread(BaseModel):
     post_count: int
     """The number of posts under this thread."""
 
-    reacts: List[ThreadReact]
-    """A list of reactions this post has had from people."""
-
-    short: str
-    """A short version of the thread's body text for use in previews."""
-
-    slug: str
-    """
-    A thread's ID and optional slug separated by a dash = it's unique mark. This
-    allows endpoints to respond to varying forms of a thread's ID.
-
-    For example, given a thread with the ID `cc5lnd2s1s4652adtu50` and the slug
-    `top-10-movies-thread`, Storyden will understand both the forms:
-    `cc5lnd2s1s4652adtu50-top-10-movies-thread` and `cc5lnd2s1s4652adtu50` as the
-    identifier for that thread.
-    """
-
     tags: List[str]
     """A list of tags associated with the thread."""
-
-    title: str
-    """The title of the thread."""
 
     updated_at: datetime = FieldInfo(alias="updatedAt")
     """The time the resource was updated."""
@@ -214,9 +112,6 @@ class Thread(BaseModel):
 
     link: Optional[ThreadLink] = None
     """A web address with content information such as title, description, etc."""
-
-    meta: Optional[Dict[str, object]] = None
-    """Arbitrary metadata for the resource."""
 
     misc: Optional[object] = None
     """Arbitrary extra data stored with the resource."""
