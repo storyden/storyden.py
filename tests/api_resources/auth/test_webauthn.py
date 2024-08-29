@@ -42,9 +42,9 @@ class TestWebauthn:
             response={
                 "client_data_json": "clientDataJSON",
                 "attestation_object": "attestationObject",
-                "transports": ["string", "string", "string"],
                 "authenticator_data": "authenticatorData",
                 "signature": "signature",
+                "transports": ["string", "string", "string"],
                 "user_handle": "userHandle",
             },
             type="type",
@@ -105,9 +105,9 @@ class TestAsyncWebauthn:
             response={
                 "client_data_json": "clientDataJSON",
                 "attestation_object": "attestationObject",
-                "transports": ["string", "string", "string"],
                 "authenticator_data": "authenticatorData",
                 "signature": "signature",
+                "transports": ["string", "string", "string"],
                 "user_handle": "userHandle",
             },
             type="type",
