@@ -11,7 +11,69 @@ from typing_extensions import Literal
 from pydantic import Field as FieldInfo
 from ..types import shared
 
-__all__ = ["PostSearchResponse", "Result"]
+__all__ = ["PostSearchResponse", "Result", "ResultBodyLink", "ResultBodyLinkFaviconImage", "ResultBodyLinkPrimaryImage"]
+
+
+class ResultBodyLinkFaviconImage(BaseModel):
+    id: str
+    """A unique identifier for this resource."""
+
+    filename: str
+
+    height: float
+
+    mime_type: str
+
+    url: str
+
+    width: float
+
+
+class ResultBodyLinkPrimaryImage(BaseModel):
+    id: str
+    """A unique identifier for this resource."""
+
+    filename: str
+
+    height: float
+
+    mime_type: str
+
+    url: str
+
+    width: float
+
+
+class ResultBodyLink(BaseModel):
+    id: str
+    """A unique identifier for this resource."""
+
+    created_at: datetime = FieldInfo(alias="createdAt")
+    """The time the resource was created."""
+
+    domain: str
+
+    slug: str
+
+    updated_at: datetime = FieldInfo(alias="updatedAt")
+    """The time the resource was updated."""
+
+    url: str
+    """A web address"""
+
+    deleted_at: Optional[datetime] = FieldInfo(alias="deletedAt", default=None)
+    """The time the resource was soft-deleted."""
+
+    description: Optional[str] = None
+
+    favicon_image: Optional[ResultBodyLinkFaviconImage] = None
+
+    misc: Optional[object] = None
+    """Arbitrary extra data stored with the resource."""
+
+    primary_image: Optional[ResultBodyLinkPrimaryImage] = None
+
+    title: Optional[str] = None
 
 
 class Result(BaseModel):
@@ -25,6 +87,8 @@ class Result(BaseModel):
     creation. Strings can be used for basic plain text or markdown content and
     objects are used for more complex types such as Slate.js editor documents.
     """
+
+    body_links: List[ResultBodyLink]
 
     created_at: datetime = FieldInfo(alias="createdAt")
     """The time the resource was created."""
