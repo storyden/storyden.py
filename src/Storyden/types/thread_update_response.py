@@ -17,15 +17,22 @@ __all__ = [
     "ThreadUpdateResponse",
     "Asset",
     "Author",
+    "BodyLink",
+    "BodyLinkFaviconImage",
+    "BodyLinkPrimaryImage",
     "Category",
     "Collection",
     "CollectionOwner",
-    "Link",
-    "LinkAsset",
     "React",
     "Recomentation",
     "RecomentationAsset",
     "Reply",
+    "ReplyBodyLink",
+    "ReplyBodyLinkFaviconImage",
+    "ReplyBodyLinkPrimaryImage",
+    "Link",
+    "LinkFaviconImage",
+    "LinkPrimaryImage",
 ]
 
 
@@ -55,6 +62,68 @@ class Author(BaseModel):
 
     name: str
     """The account owners display name."""
+
+
+class BodyLinkFaviconImage(BaseModel):
+    id: str
+    """A unique identifier for this resource."""
+
+    filename: str
+
+    height: float
+
+    mime_type: str
+
+    url: str
+
+    width: float
+
+
+class BodyLinkPrimaryImage(BaseModel):
+    id: str
+    """A unique identifier for this resource."""
+
+    filename: str
+
+    height: float
+
+    mime_type: str
+
+    url: str
+
+    width: float
+
+
+class BodyLink(BaseModel):
+    id: str
+    """A unique identifier for this resource."""
+
+    created_at: datetime = FieldInfo(alias="createdAt")
+    """The time the resource was created."""
+
+    domain: str
+
+    slug: str
+
+    updated_at: datetime = FieldInfo(alias="updatedAt")
+    """The time the resource was updated."""
+
+    url: str
+    """A web address"""
+
+    deleted_at: Optional[datetime] = FieldInfo(alias="deletedAt", default=None)
+    """The time the resource was soft-deleted."""
+
+    description: Optional[str] = None
+
+    favicon_image: Optional[BodyLinkFaviconImage] = None
+
+    misc: Optional[object] = None
+    """Arbitrary extra data stored with the resource."""
+
+    primary_image: Optional[BodyLinkPrimaryImage] = None
+
+    title: Optional[str] = None
 
 
 class Category(BaseModel):
@@ -128,36 +197,6 @@ class Collection(BaseModel):
     """Arbitrary extra data stored with the resource."""
 
 
-class LinkAsset(BaseModel):
-    id: str
-    """A unique identifier for this resource."""
-
-    filename: str
-
-    height: float
-
-    mime_type: str
-
-    url: str
-
-    width: float
-
-
-class Link(BaseModel):
-    assets: List[LinkAsset]
-
-    domain: str
-
-    slug: str
-
-    url: str
-    """A web address"""
-
-    description: Optional[str] = None
-
-    title: Optional[str] = None
-
-
 class React(BaseModel):
     id: Optional[str] = None
     """A unique identifier for this resource."""
@@ -198,6 +237,68 @@ class Recomentation(BaseModel):
     """Arbitrary metadata for the resource."""
 
 
+class ReplyBodyLinkFaviconImage(BaseModel):
+    id: str
+    """A unique identifier for this resource."""
+
+    filename: str
+
+    height: float
+
+    mime_type: str
+
+    url: str
+
+    width: float
+
+
+class ReplyBodyLinkPrimaryImage(BaseModel):
+    id: str
+    """A unique identifier for this resource."""
+
+    filename: str
+
+    height: float
+
+    mime_type: str
+
+    url: str
+
+    width: float
+
+
+class ReplyBodyLink(BaseModel):
+    id: str
+    """A unique identifier for this resource."""
+
+    created_at: datetime = FieldInfo(alias="createdAt")
+    """The time the resource was created."""
+
+    domain: str
+
+    slug: str
+
+    updated_at: datetime = FieldInfo(alias="updatedAt")
+    """The time the resource was updated."""
+
+    url: str
+    """A web address"""
+
+    deleted_at: Optional[datetime] = FieldInfo(alias="deletedAt", default=None)
+    """The time the resource was soft-deleted."""
+
+    description: Optional[str] = None
+
+    favicon_image: Optional[ReplyBodyLinkFaviconImage] = None
+
+    misc: Optional[object] = None
+    """Arbitrary extra data stored with the resource."""
+
+    primary_image: Optional[ReplyBodyLinkPrimaryImage] = None
+
+    title: Optional[str] = None
+
+
 class Reply(BaseModel):
     id: str
     """A unique identifier for this resource."""
@@ -209,6 +310,8 @@ class Reply(BaseModel):
     creation. Strings can be used for basic plain text or markdown content and
     objects are used for more complex types such as Slate.js editor documents.
     """
+
+    body_links: List[ReplyBodyLink]
 
     created_at: datetime = FieldInfo(alias="createdAt")
     """The time the resource was created."""
@@ -240,6 +343,68 @@ class Reply(BaseModel):
     """A unique identifier for this resource."""
 
 
+class LinkFaviconImage(BaseModel):
+    id: str
+    """A unique identifier for this resource."""
+
+    filename: str
+
+    height: float
+
+    mime_type: str
+
+    url: str
+
+    width: float
+
+
+class LinkPrimaryImage(BaseModel):
+    id: str
+    """A unique identifier for this resource."""
+
+    filename: str
+
+    height: float
+
+    mime_type: str
+
+    url: str
+
+    width: float
+
+
+class Link(BaseModel):
+    id: str
+    """A unique identifier for this resource."""
+
+    created_at: datetime = FieldInfo(alias="createdAt")
+    """The time the resource was created."""
+
+    domain: str
+
+    slug: str
+
+    updated_at: datetime = FieldInfo(alias="updatedAt")
+    """The time the resource was updated."""
+
+    url: str
+    """A web address"""
+
+    deleted_at: Optional[datetime] = FieldInfo(alias="deletedAt", default=None)
+    """The time the resource was soft-deleted."""
+
+    description: Optional[str] = None
+
+    favicon_image: Optional[LinkFaviconImage] = None
+
+    misc: Optional[object] = None
+    """Arbitrary extra data stored with the resource."""
+
+    primary_image: Optional[LinkPrimaryImage] = None
+
+    title: Optional[str] = None
+
+
 class ThreadUpdateResponse(BaseModel):
     id: str
     """A unique identifier for this resource."""
@@ -257,14 +422,14 @@ class ThreadUpdateResponse(BaseModel):
     objects are used for more complex types such as Slate.js editor documents.
     """
 
+    body_links: List[BodyLink]
+
     category: Category
 
     collections: List[Collection]
 
     created_at: datetime = FieldInfo(alias="createdAt")
     """The time the resource was created."""
-
-    links: List[Link]
 
     pinned: bool
     """Whether the thread is pinned in this category."""
@@ -306,7 +471,7 @@ class ThreadUpdateResponse(BaseModel):
     """A short version of the post's body text for use in previews."""
 
     link: Optional[Link] = None
-    """A web address with content information such as title, description, etc."""
+    """A minimal object used to refer to a link without sending too much data."""
 
     meta: Optional[Dict[str, object]] = None
     """Arbitrary metadata for the resource."""

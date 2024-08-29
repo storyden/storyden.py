@@ -2,9 +2,9 @@
 
 from .._models import BaseModel
 
-from typing import List, Optional, Dict
-
 from datetime import datetime
+
+from typing import Optional, List, Dict
 
 from typing_extensions import Literal
 
@@ -19,12 +19,14 @@ __all__ = [
     "DestinationAsset",
     "DestinationOwner",
     "DestinationLink",
-    "DestinationLinkAsset",
+    "DestinationLinkFaviconImage",
+    "DestinationLinkPrimaryImage",
     "DestinationParent",
     "DestinationParentAsset",
     "DestinationParentOwner",
     "DestinationParentLink",
-    "DestinationParentLinkAsset",
+    "DestinationParentLinkFaviconImage",
+    "DestinationParentLinkPrimaryImage",
 ]
 
 
@@ -56,7 +58,22 @@ class DestinationOwner(BaseModel):
     """The account owners display name."""
 
 
-class DestinationLinkAsset(BaseModel):
+class DestinationLinkFaviconImage(BaseModel):
+    id: str
+    """A unique identifier for this resource."""
+
+    filename: str
+
+    height: float
+
+    mime_type: str
+
+    url: str
+
+    width: float
+
+
+class DestinationLinkPrimaryImage(BaseModel):
     id: str
     """A unique identifier for this resource."""
 
@@ -72,16 +89,33 @@ class DestinationLinkAsset(BaseModel):
 
 
 class DestinationLink(BaseModel):
-    assets: List[DestinationLinkAsset]
+    id: str
+    """A unique identifier for this resource."""
+
+    created_at: datetime = FieldInfo(alias="createdAt")
+    """The time the resource was created."""
 
     domain: str
 
     slug: str
 
+    updated_at: datetime = FieldInfo(alias="updatedAt")
+    """The time the resource was updated."""
+
     url: str
     """A web address"""
 
+    deleted_at: Optional[datetime] = FieldInfo(alias="deletedAt", default=None)
+    """The time the resource was soft-deleted."""
+
     description: Optional[str] = None
+
+    favicon_image: Optional[DestinationLinkFaviconImage] = None
+
+    misc: Optional[object] = None
+    """Arbitrary extra data stored with the resource."""
+
+    primary_image: Optional[DestinationLinkPrimaryImage] = None
 
     title: Optional[str] = None
 
@@ -114,7 +148,22 @@ class DestinationParentOwner(BaseModel):
     """The account owners display name."""
 
 
-class DestinationParentLinkAsset(BaseModel):
+class DestinationParentLinkFaviconImage(BaseModel):
+    id: str
+    """A unique identifier for this resource."""
+
+    filename: str
+
+    height: float
+
+    mime_type: str
+
+    url: str
+
+    width: float
+
+
+class DestinationParentLinkPrimaryImage(BaseModel):
     id: str
     """A unique identifier for this resource."""
 
@@ -130,16 +179,33 @@ class DestinationParentLinkAsset(BaseModel):
 
 
 class DestinationParentLink(BaseModel):
-    assets: List[DestinationParentLinkAsset]
+    id: str
+    """A unique identifier for this resource."""
+
+    created_at: datetime = FieldInfo(alias="createdAt")
+    """The time the resource was created."""
 
     domain: str
 
     slug: str
 
+    updated_at: datetime = FieldInfo(alias="updatedAt")
+    """The time the resource was updated."""
+
     url: str
     """A web address"""
 
+    deleted_at: Optional[datetime] = FieldInfo(alias="deletedAt", default=None)
+    """The time the resource was soft-deleted."""
+
     description: Optional[str] = None
+
+    favicon_image: Optional[DestinationParentLinkFaviconImage] = None
+
+    misc: Optional[object] = None
+    """Arbitrary extra data stored with the resource."""
+
+    primary_image: Optional[DestinationParentLinkPrimaryImage] = None
 
     title: Optional[str] = None
 
@@ -183,7 +249,7 @@ class DestinationParent(BaseModel):
     """The time the resource was soft-deleted."""
 
     link: Optional[DestinationParentLink] = None
-    """A web address with content information such as title, description, etc."""
+    """A minimal object used to refer to a link without sending too much data."""
 
     misc: Optional[object] = None
     """Arbitrary extra data stored with the resource."""
@@ -236,7 +302,7 @@ class Destination(BaseModel):
     """The time the resource was soft-deleted."""
 
     link: Optional[DestinationLink] = None
-    """A web address with content information such as title, description, etc."""
+    """A minimal object used to refer to a link without sending too much data."""
 
     misc: Optional[object] = None
     """Arbitrary extra data stored with the resource."""
