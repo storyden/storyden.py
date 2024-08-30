@@ -8,7 +8,7 @@ from typing import Any, TypeVar, Iterator, cast
 from datetime import date, datetime
 from typing_extensions import Literal, get_args, get_origin, assert_type
 
-from Storyden._types import NoneType, Omit
+from Storyden._types import Omit, NoneType
 from Storyden._utils import (
     is_dict,
     is_list,

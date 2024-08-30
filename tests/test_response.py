@@ -6,7 +6,7 @@ import httpx
 import pytest
 import pydantic
 
-from Storyden import BaseModel, Storyden, AsyncStoryden
+from Storyden import Storyden, BaseModel, AsyncStoryden
 from Storyden._response import (
     APIResponse,
     BaseAPIResponse,

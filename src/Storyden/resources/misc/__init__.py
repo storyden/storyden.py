@@ -1,32 +1,28 @@
 # File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
-from .version import VersionResource, AsyncVersionResource
-from .version import (
-    VersionResourceWithRawResponse,
-    AsyncVersionResourceWithRawResponse,
-    VersionResourceWithStreamingResponse,
-    AsyncVersionResourceWithStreamingResponse,
+from .misc import (
+    MiscResource,
+    AsyncMiscResource,
+    MiscResourceWithRawResponse,
+    AsyncMiscResourceWithRawResponse,
+    MiscResourceWithStreamingResponse,
+    AsyncMiscResourceWithStreamingResponse,
 )
-from .openapi import OpenAPIResource, AsyncOpenAPIResource
 from .openapi import (
+    OpenAPIResource,
+    AsyncOpenAPIResource,
     OpenAPIResourceWithRawResponse,
     AsyncOpenAPIResourceWithRawResponse,
     OpenAPIResourceWithStreamingResponse,
     AsyncOpenAPIResourceWithStreamingResponse,
 )
-from .info import InfoResource, AsyncInfoResource
-from .info import (
-    InfoResourceWithRawResponse,
-    AsyncInfoResourceWithRawResponse,
-    InfoResourceWithStreamingResponse,
-    AsyncInfoResourceWithStreamingResponse,
-)
-from .misc import MiscResource, AsyncMiscResource
-from .misc import (
-    MiscResourceWithRawResponse,
-    AsyncMiscResourceWithRawResponse,
-    MiscResourceWithStreamingResponse,
-    AsyncMiscResourceWithStreamingResponse,
+from .version import (
+    VersionResource,
+    AsyncVersionResource,
+    VersionResourceWithRawResponse,
+    AsyncVersionResourceWithRawResponse,
+    VersionResourceWithStreamingResponse,
+    AsyncVersionResourceWithStreamingResponse,
 )
 
 __all__ = [
@@ -42,12 +38,6 @@ __all__ = [
     "AsyncOpenAPIResourceWithRawResponse",
     "OpenAPIResourceWithStreamingResponse",
     "AsyncOpenAPIResourceWithStreamingResponse",
-    "InfoResource",
-    "AsyncInfoResource",
-    "InfoResourceWithRawResponse",
-    "AsyncInfoResourceWithRawResponse",
-    "InfoResourceWithStreamingResponse",
-    "AsyncInfoResourceWithStreamingResponse",
     "MiscResource",
     "AsyncMiscResource",
     "MiscResourceWithRawResponse",

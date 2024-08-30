@@ -2,45 +2,32 @@
 
 from __future__ import annotations
 
-import httpx
-
-from Storyden import Storyden, AsyncStoryden
-
-from Storyden._exceptions import APITimeoutError, APIStatusError, APIResponseValidationError
-
-from typing import Any, cast
-
-from pydantic import ValidationError
-
-import asyncio
 import gc
-import inspect
-import json
 import os
+import json
+import asyncio
+import inspect
 import tracemalloc
-from typing import Dict, Any, Union, cast
+from typing import Any, Union, cast
 from unittest import mock
 
 import httpx
 import pytest
 from respx import MockRouter
+from pydantic import ValidationError
 
 from Storyden import Storyden, AsyncStoryden, APIResponseValidationError
-from Storyden._models import FinalRequestOptions, BaseModel
-from Storyden._types import NOT_GIVEN, Headers, NotGiven, Query, Body, Timeout, Omit
+from Storyden._models import BaseModel, FinalRequestOptions
+from Storyden._constants import RAW_RESPONSE_HEADER
+from Storyden._exceptions import APIStatusError, APITimeoutError, APIResponseValidationError
 from Storyden._base_client import (
     DEFAULT_TIMEOUT,
     HTTPX_DEFAULT_TIMEOUT,
     BaseClient,
-    RequestOptions,
     make_request_options,
 )
-from Storyden._streaming import Stream, AsyncStream
-from Storyden._constants import RAW_RESPONSE_HEADER
-from Storyden._response import APIResponse, AsyncAPIResponse
+
 from .utils import update_env
-from typing import cast
-from typing import cast
 
 base_url = os.environ.get("TEST_API_BASE_URL", "http://127.0.0.1:4010")
 
@@ -678,30 +665,20 @@ class TestStoryden:
     @mock.patch("Storyden._base_client.BaseClient._calculate_retry_timeout", _low_retry_timeout)
     @pytest.mark.respx(base_url=base_url)
     def test_retrying_timeout_errors_doesnt_leak(self, respx_mock: MockRouter) -> None:
-        respx_mock.patch("/v1/admin").mock(side_effect=httpx.TimeoutException("Test timeout error"))
+        respx_mock.get("/version").mock(side_effect=httpx.TimeoutException("Test timeout error"))
 
         with pytest.raises(APITimeoutError):
-            self.client.patch(
-                "/v1/admin",
-                body=cast(object, dict()),
-                cast_to=httpx.Response,
-                options={"headers": {RAW_RESPONSE_HEADER: "stream"}},
-            )
+            self.client.get("/version", cast_to=httpx.Response, options={"headers": {RAW_RESPONSE_HEADER: "stream"}})
 
         assert _get_open_connections(self.client) == 0
 
     @mock.patch("Storyden._base_client.BaseClient._calculate_retry_timeout", _low_retry_timeout)
     @pytest.mark.respx(base_url=base_url)
     def test_retrying_status_errors_doesnt_leak(self, respx_mock: MockRouter) -> None:
-        respx_mock.patch("/v1/admin").mock(return_value=httpx.Response(500))
+        respx_mock.get("/version").mock(return_value=httpx.Response(500))
 
         with pytest.raises(APIStatusError):
-            self.client.patch(
-                "/v1/admin",
-                body=cast(object, dict()),
-                cast_to=httpx.Response,
-                options={"headers": {RAW_RESPONSE_HEADER: "stream"}},
-            )
+            self.client.get("/version", cast_to=httpx.Response, options={"headers": {RAW_RESPONSE_HEADER: "stream"}})
 
         assert _get_open_connections(self.client) == 0
 
@@ -720,9 +697,9 @@ class TestStoryden:
                 return httpx.Response(500)
             return httpx.Response(200)
 
-        respx_mock.patch("/v1/admin").mock(side_effect=retry_handler)
+        respx_mock.get("/version").mock(side_effect=retry_handler)
 
-        response = client.admin.with_raw_response.update()
+        response = client.misc.version.with_raw_response.retrieve()
 
         assert response.retries_taken == failures_before_success
 
@@ -1350,14 +1327,11 @@ class TestAsyncStoryden:
     @mock.patch("Storyden._base_client.BaseClient._calculate_retry_timeout", _low_retry_timeout)
     @pytest.mark.respx(base_url=base_url)
     async def test_retrying_timeout_errors_doesnt_leak(self, respx_mock: MockRouter) -> None:
-        respx_mock.patch("/v1/admin").mock(side_effect=httpx.TimeoutException("Test timeout error"))
+        respx_mock.get("/version").mock(side_effect=httpx.TimeoutException("Test timeout error"))
 
         with pytest.raises(APITimeoutError):
-            await self.client.patch(
-                "/v1/admin",
-                body=cast(object, dict()),
-                cast_to=httpx.Response,
-                options={"headers": {RAW_RESPONSE_HEADER: "stream"}},
+            await self.client.get(
+                "/version", cast_to=httpx.Response, options={"headers": {RAW_RESPONSE_HEADER: "stream"}}
             )
 
         assert _get_open_connections(self.client) == 0
@@ -1365,14 +1339,11 @@ class TestAsyncStoryden:
     @mock.patch("Storyden._base_client.BaseClient._calculate_retry_timeout", _low_retry_timeout)
     @pytest.mark.respx(base_url=base_url)
     async def test_retrying_status_errors_doesnt_leak(self, respx_mock: MockRouter) -> None:
-        respx_mock.patch("/v1/admin").mock(return_value=httpx.Response(500))
+        respx_mock.get("/version").mock(return_value=httpx.Response(500))
 
         with pytest.raises(APIStatusError):
-            await self.client.patch(
-                "/v1/admin",
-                body=cast(object, dict()),
-                cast_to=httpx.Response,
-                options={"headers": {RAW_RESPONSE_HEADER: "stream"}},
+            await self.client.get(
+                "/version", cast_to=httpx.Response, options={"headers": {RAW_RESPONSE_HEADER: "stream"}}
             )
 
         assert _get_open_connections(self.client) == 0
@@ -1395,8 +1366,8 @@ class TestAsyncStoryden:
                 return httpx.Response(500)
             return httpx.Response(200)
 
-        respx_mock.patch("/v1/admin").mock(side_effect=retry_handler)
+        respx_mock.get("/version").mock(side_effect=retry_handler)
 
-        response = await client.admin.with_raw_response.update()
+        response = await client.misc.version.with_raw_response.retrieve()
 
         assert response.retries_taken == failures_before_success
