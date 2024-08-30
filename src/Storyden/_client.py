@@ -2,67 +2,35 @@
 
 from __future__ import annotations
 
-import httpx
-
 import os
-
-from ._streaming import AsyncStream as AsyncStream, Stream as Stream
-
-from typing_extensions import override, Self
-
-from typing import Any
-
-from ._exceptions import APIStatusError
-
-from ._utils import get_async_library
-
-from . import _exceptions
-
-import os
-import asyncio
-import warnings
-from typing import Optional, Union, Dict, Any, Mapping, overload, cast
-from typing_extensions import Literal
+from typing import Any, Union, Mapping
+from typing_extensions import Self, override
 
 import httpx
 
-from ._version import __version__
+from . import resources, _exceptions
 from ._qs import Querystring
-from ._utils import (
-    extract_files,
-    maybe_transform,
-    required_args,
-    deepcopy_minimal,
-    maybe_coerce_integer,
-    maybe_coerce_float,
-    maybe_coerce_boolean,
-    is_given,
-)
 from ._types import (
+    NOT_GIVEN,
     Omit,
-    NotGiven,
     Timeout,
+    NotGiven,
     Transport,
     ProxiesTypes,
     RequestOptions,
-    Headers,
-    NoneType,
-    Query,
-    Body,
-    NOT_GIVEN,
 )
+from ._utils import (
+    is_given,
+    get_async_library,
+)
+from ._version import __version__
+from ._streaming import Stream as Stream, AsyncStream as AsyncStream
+from ._exceptions import APIStatusError
 from ._base_client import (
-    DEFAULT_CONNECTION_LIMITS,
-    DEFAULT_TIMEOUT,
     DEFAULT_MAX_RETRIES,
-    ResponseT,
-    SyncHttpxClientWrapper,
-    AsyncHttpxClientWrapper,
     SyncAPIClient,
     AsyncAPIClient,
-    make_request_options,
 )
-from . import resources
 
 __all__ = [
     "Timeout",
@@ -79,18 +47,6 @@ __all__ = [
 
 class Storyden(SyncAPIClient):
     misc: resources.MiscResource
-    admin: resources.AdminResource
-    auth: resources.AuthResource
-    accounts: resources.AccountsResource
-    profiles: resources.ProfilesResource
-    categories: resources.CategoriesResource
-    threads: resources.ThreadsResource
-    posts: resources.PostsResource
-    assets: resources.AssetsResource
-    collections: resources.CollectionsResource
-    nodes: resources.NodesResource
-    links: resources.LinksResource
-    datagraph: resources.DatagraphResource
     with_raw_response: StorydenWithRawResponse
     with_streaming_response: StorydenWithStreamedResponse
 
@@ -136,18 +92,6 @@ class Storyden(SyncAPIClient):
         )
 
         self.misc = resources.MiscResource(self)
-        self.admin = resources.AdminResource(self)
-        self.auth = resources.AuthResource(self)
-        self.accounts = resources.AccountsResource(self)
-        self.profiles = resources.ProfilesResource(self)
-        self.categories = resources.CategoriesResource(self)
-        self.threads = resources.ThreadsResource(self)
-        self.posts = resources.PostsResource(self)
-        self.assets = resources.AssetsResource(self)
-        self.collections = resources.CollectionsResource(self)
-        self.nodes = resources.NodesResource(self)
-        self.links = resources.LinksResource(self)
-        self.datagraph = resources.DatagraphResource(self)
         self.with_raw_response = StorydenWithRawResponse(self)
         self.with_streaming_response = StorydenWithStreamedResponse(self)
 
@@ -250,18 +194,6 @@ class Storyden(SyncAPIClient):
 
 class AsyncStoryden(AsyncAPIClient):
     misc: resources.AsyncMiscResource
-    admin: resources.AsyncAdminResource
-    auth: resources.AsyncAuthResource
-    accounts: resources.AsyncAccountsResource
-    profiles: resources.AsyncProfilesResource
-    categories: resources.AsyncCategoriesResource
-    threads: resources.AsyncThreadsResource
-    posts: resources.AsyncPostsResource
-    assets: resources.AsyncAssetsResource
-    collections: resources.AsyncCollectionsResource
-    nodes: resources.AsyncNodesResource
-    links: resources.AsyncLinksResource
-    datagraph: resources.AsyncDatagraphResource
     with_raw_response: AsyncStorydenWithRawResponse
     with_streaming_response: AsyncStorydenWithStreamedResponse
 
@@ -307,18 +239,6 @@ class AsyncStoryden(AsyncAPIClient):
         )
 
         self.misc = resources.AsyncMiscResource(self)
-        self.admin = resources.AsyncAdminResource(self)
-        self.auth = resources.AsyncAuthResource(self)
-        self.accounts = resources.AsyncAccountsResource(self)
-        self.profiles = resources.AsyncProfilesResource(self)
-        self.categories = resources.AsyncCategoriesResource(self)
-        self.threads = resources.AsyncThreadsResource(self)
-        self.posts = resources.AsyncPostsResource(self)
-        self.assets = resources.AsyncAssetsResource(self)
-        self.collections = resources.AsyncCollectionsResource(self)
-        self.nodes = resources.AsyncNodesResource(self)
-        self.links = resources.AsyncLinksResource(self)
-        self.datagraph = resources.AsyncDatagraphResource(self)
         self.with_raw_response = AsyncStorydenWithRawResponse(self)
         self.with_streaming_response = AsyncStorydenWithStreamedResponse(self)
 
@@ -422,69 +342,21 @@ class AsyncStoryden(AsyncAPIClient):
 class StorydenWithRawResponse:
     def __init__(self, client: Storyden) -> None:
         self.misc = resources.MiscResourceWithRawResponse(client.misc)
-        self.admin = resources.AdminResourceWithRawResponse(client.admin)
-        self.auth = resources.AuthResourceWithRawResponse(client.auth)
-        self.accounts = resources.AccountsResourceWithRawResponse(client.accounts)
-        self.profiles = resources.ProfilesResourceWithRawResponse(client.profiles)
-        self.categories = resources.CategoriesResourceWithRawResponse(client.categories)
-        self.threads = resources.ThreadsResourceWithRawResponse(client.threads)
-        self.posts = resources.PostsResourceWithRawResponse(client.posts)
-        self.assets = resources.AssetsResourceWithRawResponse(client.assets)
-        self.collections = resources.CollectionsResourceWithRawResponse(client.collections)
-        self.nodes = resources.NodesResourceWithRawResponse(client.nodes)
-        self.links = resources.LinksResourceWithRawResponse(client.links)
-        self.datagraph = resources.DatagraphResourceWithRawResponse(client.datagraph)
 
 
 class AsyncStorydenWithRawResponse:
     def __init__(self, client: AsyncStoryden) -> None:
         self.misc = resources.AsyncMiscResourceWithRawResponse(client.misc)
-        self.admin = resources.AsyncAdminResourceWithRawResponse(client.admin)
-        self.auth = resources.AsyncAuthResourceWithRawResponse(client.auth)
-        self.accounts = resources.AsyncAccountsResourceWithRawResponse(client.accounts)
-        self.profiles = resources.AsyncProfilesResourceWithRawResponse(client.profiles)
-        self.categories = resources.AsyncCategoriesResourceWithRawResponse(client.categories)
-        self.threads = resources.AsyncThreadsResourceWithRawResponse(client.threads)
-        self.posts = resources.AsyncPostsResourceWithRawResponse(client.posts)
-        self.assets = resources.AsyncAssetsResourceWithRawResponse(client.assets)
-        self.collections = resources.AsyncCollectionsResourceWithRawResponse(client.collections)
-        self.nodes = resources.AsyncNodesResourceWithRawResponse(client.nodes)
-        self.links = resources.AsyncLinksResourceWithRawResponse(client.links)
-        self.datagraph = resources.AsyncDatagraphResourceWithRawResponse(client.datagraph)
 
 
 class StorydenWithStreamedResponse:
     def __init__(self, client: Storyden) -> None:
         self.misc = resources.MiscResourceWithStreamingResponse(client.misc)
-        self.admin = resources.AdminResourceWithStreamingResponse(client.admin)
-        self.auth = resources.AuthResourceWithStreamingResponse(client.auth)
-        self.accounts = resources.AccountsResourceWithStreamingResponse(client.accounts)
-        self.profiles = resources.ProfilesResourceWithStreamingResponse(client.profiles)
-        self.categories = resources.CategoriesResourceWithStreamingResponse(client.categories)
-        self.threads = resources.ThreadsResourceWithStreamingResponse(client.threads)
-        self.posts = resources.PostsResourceWithStreamingResponse(client.posts)
-        self.assets = resources.AssetsResourceWithStreamingResponse(client.assets)
-        self.collections = resources.CollectionsResourceWithStreamingResponse(client.collections)
-        self.nodes = resources.NodesResourceWithStreamingResponse(client.nodes)
-        self.links = resources.LinksResourceWithStreamingResponse(client.links)
-        self.datagraph = resources.DatagraphResourceWithStreamingResponse(client.datagraph)
 
 
 class AsyncStorydenWithStreamedResponse:
     def __init__(self, client: AsyncStoryden) -> None:
         self.misc = resources.AsyncMiscResourceWithStreamingResponse(client.misc)
-        self.admin = resources.AsyncAdminResourceWithStreamingResponse(client.admin)
-        self.auth = resources.AsyncAuthResourceWithStreamingResponse(client.auth)
-        self.accounts = resources.AsyncAccountsResourceWithStreamingResponse(client.accounts)
-        self.profiles = resources.AsyncProfilesResourceWithStreamingResponse(client.profiles)
-        self.categories = resources.AsyncCategoriesResourceWithStreamingResponse(client.categories)
-        self.threads = resources.AsyncThreadsResourceWithStreamingResponse(client.threads)
-        self.posts = resources.AsyncPostsResourceWithStreamingResponse(client.posts)
-        self.assets = resources.AsyncAssetsResourceWithStreamingResponse(client.assets)
-        self.collections = resources.AsyncCollectionsResourceWithStreamingResponse(client.collections)
-        self.nodes = resources.AsyncNodesResourceWithStreamingResponse(client.nodes)
-        self.links = resources.AsyncLinksResourceWithStreamingResponse(client.links)
-        self.datagraph = resources.AsyncDatagraphResourceWithStreamingResponse(client.datagraph)
 
 
 Client = Storyden

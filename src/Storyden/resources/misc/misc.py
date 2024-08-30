@@ -2,29 +2,6 @@
 
 from __future__ import annotations
 
-from .version import VersionResource, AsyncVersionResource
-
-from ..._compat import cached_property
-
-from .openapi import OpenAPIResource, AsyncOpenAPIResource
-
-from .info.info import InfoResource, AsyncInfoResource
-
-import warnings
-from typing import TYPE_CHECKING, Optional, Union, List, Dict, Any, Mapping, cast, overload
-from typing_extensions import Literal
-from ..._utils import extract_files, maybe_transform, required_args, deepcopy_minimal, strip_not_given
-from ..._types import NotGiven, Timeout, Headers, NoneType, Query, Body, NOT_GIVEN, FileTypes, BinaryResponseContent
-from ..._resource import SyncAPIResource, AsyncAPIResource
-from ...types import shared_params
-from .version import (
-    VersionResource,
-    AsyncVersionResource,
-    VersionResourceWithRawResponse,
-    AsyncVersionResourceWithRawResponse,
-    VersionResourceWithStreamingResponse,
-    AsyncVersionResourceWithStreamingResponse,
-)
 from .openapi import (
     OpenAPIResource,
     AsyncOpenAPIResource,
@@ -33,14 +10,16 @@ from .openapi import (
     OpenAPIResourceWithStreamingResponse,
     AsyncOpenAPIResourceWithStreamingResponse,
 )
-from .info import (
-    InfoResource,
-    AsyncInfoResource,
-    InfoResourceWithRawResponse,
-    AsyncInfoResourceWithRawResponse,
-    InfoResourceWithStreamingResponse,
-    AsyncInfoResourceWithStreamingResponse,
+from .version import (
+    VersionResource,
+    AsyncVersionResource,
+    VersionResourceWithRawResponse,
+    AsyncVersionResourceWithRawResponse,
+    VersionResourceWithStreamingResponse,
+    AsyncVersionResourceWithStreamingResponse,
 )
+from ..._compat import cached_property
+from ..._resource import SyncAPIResource, AsyncAPIResource
 
 __all__ = ["MiscResource", "AsyncMiscResource"]
 
@@ -53,10 +32,6 @@ class MiscResource(SyncAPIResource):
     @cached_property
     def openapi(self) -> OpenAPIResource:
         return OpenAPIResource(self._client)
-
-    @cached_property
-    def info(self) -> InfoResource:
-        return InfoResource(self._client)
 
     @cached_property
     def with_raw_response(self) -> MiscResourceWithRawResponse:
@@ -75,10 +50,6 @@ class AsyncMiscResource(AsyncAPIResource):
     @cached_property
     def openapi(self) -> AsyncOpenAPIResource:
         return AsyncOpenAPIResource(self._client)
-
-    @cached_property
-    def info(self) -> AsyncInfoResource:
-        return AsyncInfoResource(self._client)
 
     @cached_property
     def with_raw_response(self) -> AsyncMiscResourceWithRawResponse:
@@ -101,10 +72,6 @@ class MiscResourceWithRawResponse:
     def openapi(self) -> OpenAPIResourceWithRawResponse:
         return OpenAPIResourceWithRawResponse(self._misc.openapi)
 
-    @cached_property
-    def info(self) -> InfoResourceWithRawResponse:
-        return InfoResourceWithRawResponse(self._misc.info)
-
 
 class AsyncMiscResourceWithRawResponse:
     def __init__(self, misc: AsyncMiscResource) -> None:
@@ -117,10 +84,6 @@ class AsyncMiscResourceWithRawResponse:
     @cached_property
     def openapi(self) -> AsyncOpenAPIResourceWithRawResponse:
         return AsyncOpenAPIResourceWithRawResponse(self._misc.openapi)
-
-    @cached_property
-    def info(self) -> AsyncInfoResourceWithRawResponse:
-        return AsyncInfoResourceWithRawResponse(self._misc.info)
 
 
 class MiscResourceWithStreamingResponse:
@@ -135,10 +98,6 @@ class MiscResourceWithStreamingResponse:
     def openapi(self) -> OpenAPIResourceWithStreamingResponse:
         return OpenAPIResourceWithStreamingResponse(self._misc.openapi)
 
-    @cached_property
-    def info(self) -> InfoResourceWithStreamingResponse:
-        return InfoResourceWithStreamingResponse(self._misc.info)
-
 
 class AsyncMiscResourceWithStreamingResponse:
     def __init__(self, misc: AsyncMiscResource) -> None:
@@ -151,7 +110,3 @@ class AsyncMiscResourceWithStreamingResponse:
     @cached_property
     def openapi(self) -> AsyncOpenAPIResourceWithStreamingResponse:
         return AsyncOpenAPIResourceWithStreamingResponse(self._misc.openapi)
-
-    @cached_property
-    def info(self) -> AsyncInfoResourceWithStreamingResponse:
-        return AsyncInfoResourceWithStreamingResponse(self._misc.info)
