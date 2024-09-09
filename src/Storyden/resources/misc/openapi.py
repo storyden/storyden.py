@@ -21,10 +21,21 @@ __all__ = ["OpenAPIResource", "AsyncOpenAPIResource"]
 class OpenAPIResource(SyncAPIResource):
     @cached_property
     def with_raw_response(self) -> OpenAPIResourceWithRawResponse:
+        """
+        This property can be used as a prefix for any HTTP method call to return the
+        the raw response object instead of the parsed content.
+
+        For more information, see https://www.github.com/stainless-sdks/Storyden-python#accessing-raw-response-data-eg-headers
+        """
         return OpenAPIResourceWithRawResponse(self)
 
     @cached_property
     def with_streaming_response(self) -> OpenAPIResourceWithStreamingResponse:
+        """
+        An alternative to `.with_raw_response` that doesn't eagerly read the response body.
+
+        For more information, see https://www.github.com/stainless-sdks/Storyden-python#with_streaming_response
+        """
         return OpenAPIResourceWithStreamingResponse(self)
 
     def retrieve(
@@ -54,10 +65,21 @@ class OpenAPIResource(SyncAPIResource):
 class AsyncOpenAPIResource(AsyncAPIResource):
     @cached_property
     def with_raw_response(self) -> AsyncOpenAPIResourceWithRawResponse:
+        """
+        This property can be used as a prefix for any HTTP method call to return the
+        the raw response object instead of the parsed content.
+
+        For more information, see https://www.github.com/stainless-sdks/Storyden-python#accessing-raw-response-data-eg-headers
+        """
         return AsyncOpenAPIResourceWithRawResponse(self)
 
     @cached_property
     def with_streaming_response(self) -> AsyncOpenAPIResourceWithStreamingResponse:
+        """
+        An alternative to `.with_raw_response` that doesn't eagerly read the response body.
+
+        For more information, see https://www.github.com/stainless-sdks/Storyden-python#with_streaming_response
+        """
         return AsyncOpenAPIResourceWithStreamingResponse(self)
 
     async def retrieve(
