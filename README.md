@@ -31,7 +31,7 @@ from Storyden import Storyden
 
 client = Storyden()
 
-version_retrieve_response = client.misc.version.retrieve()
+version = client.misc.version.retrieve()
 ```
 
 ## Async usage
@@ -46,7 +46,7 @@ client = AsyncStoryden()
 
 
 async def main() -> None:
-    version_retrieve_response = await client.misc.version.retrieve()
+    version = await client.misc.version.retrieve()
 
 
 asyncio.run(main())
