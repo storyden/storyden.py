@@ -8,7 +8,7 @@ from typing_extensions import Self, override
 
 import httpx
 
-from . import _exceptions
+from . import resources, _exceptions
 from ._qs import Querystring
 from ._types import (
     NOT_GIVEN,
@@ -31,13 +31,13 @@ from ._base_client import (
     SyncAPIClient,
     AsyncAPIClient,
 )
-from .resources.misc import misc
 
 __all__ = [
     "Timeout",
     "Transport",
     "ProxiesTypes",
     "RequestOptions",
+    "resources",
     "Storyden",
     "AsyncStoryden",
     "Client",
@@ -46,7 +46,7 @@ __all__ = [
 
 
 class Storyden(SyncAPIClient):
-    misc: misc.MiscResource
+    misc: resources.MiscResource
     with_raw_response: StorydenWithRawResponse
     with_streaming_response: StorydenWithStreamedResponse
 
@@ -91,7 +91,7 @@ class Storyden(SyncAPIClient):
             _strict_response_validation=_strict_response_validation,
         )
 
-        self.misc = misc.MiscResource(self)
+        self.misc = resources.MiscResource(self)
         self.with_raw_response = StorydenWithRawResponse(self)
         self.with_streaming_response = StorydenWithStreamedResponse(self)
 
@@ -193,7 +193,7 @@ class Storyden(SyncAPIClient):
 
 
 class AsyncStoryden(AsyncAPIClient):
-    misc: misc.AsyncMiscResource
+    misc: resources.AsyncMiscResource
     with_raw_response: AsyncStorydenWithRawResponse
     with_streaming_response: AsyncStorydenWithStreamedResponse
 
@@ -238,7 +238,7 @@ class AsyncStoryden(AsyncAPIClient):
             _strict_response_validation=_strict_response_validation,
         )
 
-        self.misc = misc.AsyncMiscResource(self)
+        self.misc = resources.AsyncMiscResource(self)
         self.with_raw_response = AsyncStorydenWithRawResponse(self)
         self.with_streaming_response = AsyncStorydenWithStreamedResponse(self)
 
@@ -341,22 +341,22 @@ class AsyncStoryden(AsyncAPIClient):
 
 class StorydenWithRawResponse:
     def __init__(self, client: Storyden) -> None:
-        self.misc = misc.MiscResourceWithRawResponse(client.misc)
+        self.misc = resources.MiscResourceWithRawResponse(client.misc)
 
 
 class AsyncStorydenWithRawResponse:
     def __init__(self, client: AsyncStoryden) -> None:
-        self.misc = misc.AsyncMiscResourceWithRawResponse(client.misc)
+        self.misc = resources.AsyncMiscResourceWithRawResponse(client.misc)
 
 
 class StorydenWithStreamedResponse:
     def __init__(self, client: Storyden) -> None:
-        self.misc = misc.MiscResourceWithStreamingResponse(client.misc)
+        self.misc = resources.MiscResourceWithStreamingResponse(client.misc)
 
 
 class AsyncStorydenWithStreamedResponse:
     def __init__(self, client: AsyncStoryden) -> None:
-        self.misc = misc.AsyncMiscResourceWithStreamingResponse(client.misc)
+        self.misc = resources.AsyncMiscResourceWithStreamingResponse(client.misc)
 
 
 Client = Storyden
