@@ -221,7 +221,7 @@ class AsyncStoryden(AsyncAPIClient):
         # part of our public interface in the future.
         _strict_response_validation: bool = False,
     ) -> None:
-        """Construct a new async Storyden client instance."""
+        """Construct a new async AsyncStoryden client instance."""
         if base_url is None:
             base_url = os.environ.get("STORYDEN_BASE_URL")
         if base_url is None:
