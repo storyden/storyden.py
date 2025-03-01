@@ -19,7 +19,7 @@ class TestOpenAPI:
     @parametrize
     def test_method_retrieve(self, client: Storyden) -> None:
         openapi = client.misc.openapi.retrieve()
-        assert_matches_type(str, openapi, path=["response"])
+        assert_matches_type(object, openapi, path=["response"])
 
     @parametrize
     def test_raw_response_retrieve(self, client: Storyden) -> None:
@@ -28,7 +28,7 @@ class TestOpenAPI:
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
         openapi = response.parse()
-        assert_matches_type(str, openapi, path=["response"])
+        assert_matches_type(object, openapi, path=["response"])
 
     @parametrize
     def test_streaming_response_retrieve(self, client: Storyden) -> None:
@@ -37,7 +37,7 @@ class TestOpenAPI:
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
             openapi = response.parse()
-            assert_matches_type(str, openapi, path=["response"])
+            assert_matches_type(object, openapi, path=["response"])
 
         assert cast(Any, response.is_closed) is True
 
@@ -48,7 +48,7 @@ class TestAsyncOpenAPI:
     @parametrize
     async def test_method_retrieve(self, async_client: AsyncStoryden) -> None:
         openapi = await async_client.misc.openapi.retrieve()
-        assert_matches_type(str, openapi, path=["response"])
+        assert_matches_type(object, openapi, path=["response"])
 
     @parametrize
     async def test_raw_response_retrieve(self, async_client: AsyncStoryden) -> None:
@@ -57,7 +57,7 @@ class TestAsyncOpenAPI:
         assert response.is_closed is True
         assert response.http_request.headers.get("X-Stainless-Lang") == "python"
         openapi = await response.parse()
-        assert_matches_type(str, openapi, path=["response"])
+        assert_matches_type(object, openapi, path=["response"])
 
     @parametrize
     async def test_streaming_response_retrieve(self, async_client: AsyncStoryden) -> None:
@@ -66,6 +66,6 @@ class TestAsyncOpenAPI:
             assert response.http_request.headers.get("X-Stainless-Lang") == "python"
 
             openapi = await response.parse()
-            assert_matches_type(str, openapi, path=["response"])
+            assert_matches_type(object, openapi, path=["response"])
 
         assert cast(Any, response.is_closed) is True
