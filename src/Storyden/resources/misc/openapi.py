@@ -47,18 +47,19 @@ class OpenAPIResource(SyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> str:
+    ) -> object:
         """
-        Note: the generator creates a `map[string]interface{}` if this is set to
-        `application/json`... so I'm just using plain text for now.
+        This endpoint returns the OpenAPI specification for the Storyden API in JSON
+        format. This is useful for clients that want to dynamically load the API
+        specification for documentation or code generation.
         """
-        extra_headers = {"Accept": "text/plain", **(extra_headers or {})}
+        extra_headers = {"Accept": "application/vnd.oai.openapi+json;version=3.1.0", **(extra_headers or {})}
         return self._get(
             "/openapi.json",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=str,
+            cast_to=object,
         )
 
 
@@ -91,18 +92,19 @@ class AsyncOpenAPIResource(AsyncAPIResource):
         extra_query: Query | None = None,
         extra_body: Body | None = None,
         timeout: float | httpx.Timeout | None | NotGiven = NOT_GIVEN,
-    ) -> str:
+    ) -> object:
         """
-        Note: the generator creates a `map[string]interface{}` if this is set to
-        `application/json`... so I'm just using plain text for now.
+        This endpoint returns the OpenAPI specification for the Storyden API in JSON
+        format. This is useful for clients that want to dynamically load the API
+        specification for documentation or code generation.
         """
-        extra_headers = {"Accept": "text/plain", **(extra_headers or {})}
+        extra_headers = {"Accept": "application/vnd.oai.openapi+json;version=3.1.0", **(extra_headers or {})}
         return await self._get(
             "/openapi.json",
             options=make_request_options(
                 extra_headers=extra_headers, extra_query=extra_query, extra_body=extra_body, timeout=timeout
             ),
-            cast_to=str,
+            cast_to=object,
         )
 
 

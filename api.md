@@ -22,4 +22,4 @@ from Storyden.types.misc import OpenAPIRetrieveResponse
 
 Methods:
 
-- <code title="get /openapi.json">client.misc.openapi.<a href="./src/Storyden/resources/misc/openapi.py">retrieve</a>() -> str</code>
+- <code title="get /openapi.json">client.misc.openapi.<a href="./src/Storyden/resources/misc/openapi.py">retrieve</a>() -> <a href="./src/Storyden/types/misc/openapi_retrieve_response.py">object</a></code>
