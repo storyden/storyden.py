@@ -54,6 +54,35 @@ asyncio.run(main())
 
 Functionality between the synchronous and asynchronous clients is otherwise identical.
 
+### With aiohttp
+
+By default, the async client uses `httpx` for HTTP requests. However, for improved concurrency performance you may also use `aiohttp` as the HTTP backend.
+
+You can enable this by installing `aiohttp`:
+
+```sh
+# install from this staging repo
+pip install 'Storyden[aiohttp] @ git+ssh://git@github.com/stainless-sdks/storyden-python.git'
+```
+
+Then you can enable it by instantiating the client with `http_client=DefaultAioHttpClient()`:
+
+```python
+import asyncio
+from Storyden import DefaultAioHttpClient
+from Storyden import AsyncStoryden
+
+
+async def main() -> None:
+    async with AsyncStoryden(
+        http_client=DefaultAioHttpClient(),
+    ) as client:
+        version = await client.misc.version.retrieve()
+
+
+asyncio.run(main())
+```
+
 ## Using types
 
 Nested request parameters are [TypedDicts](https://docs.python.org/3/library/typing.html#typing.TypedDict). Responses are [Pydantic models](https://docs.pydantic.dev) which also provide helper methods for things like:
