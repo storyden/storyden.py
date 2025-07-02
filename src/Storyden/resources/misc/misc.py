@@ -39,7 +39,7 @@ class MiscResource(SyncAPIResource):
         This property can be used as a prefix for any HTTP method call to return
         the raw response object instead of the parsed content.
 
-        For more information, see https://www.github.com/stainless-sdks/storyden-python#accessing-raw-response-data-eg-headers
+        For more information, see https://www.github.com/storyden/storyden.py#accessing-raw-response-data-eg-headers
         """
         return MiscResourceWithRawResponse(self)
 
@@ -48,7 +48,7 @@ class MiscResource(SyncAPIResource):
         """
         An alternative to `.with_raw_response` that doesn't eagerly read the response body.
 
-        For more information, see https://www.github.com/stainless-sdks/storyden-python#with_streaming_response
+        For more information, see https://www.github.com/storyden/storyden.py#with_streaming_response
         """
         return MiscResourceWithStreamingResponse(self)
 
@@ -68,7 +68,7 @@ class AsyncMiscResource(AsyncAPIResource):
         This property can be used as a prefix for any HTTP method call to return
         the raw response object instead of the parsed content.
 
-        For more information, see https://www.github.com/stainless-sdks/storyden-python#accessing-raw-response-data-eg-headers
+        For more information, see https://www.github.com/storyden/storyden.py#accessing-raw-response-data-eg-headers
         """
         return AsyncMiscResourceWithRawResponse(self)
 
@@ -77,7 +77,7 @@ class AsyncMiscResource(AsyncAPIResource):
         """
         An alternative to `.with_raw_response` that doesn't eagerly read the response body.
 
-        For more information, see https://www.github.com/stainless-sdks/storyden-python#with_streaming_response
+        For more information, see https://www.github.com/storyden/storyden.py#with_streaming_response
         """
         return AsyncMiscResourceWithStreamingResponse(self)
 
